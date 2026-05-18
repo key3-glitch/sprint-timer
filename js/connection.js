@@ -308,9 +308,14 @@ class ConnectionManager {
      */
     async connectWebSocket() {
         return new Promise((resolve, reject) => {
-            // Socket.IO connection
-            this.ws = io('http://localhost:3000', {
-                transports: ['websocket', 'polling']
+            // Socket.IO connection - use signaling server URL
+            console.log('[WebSocket] Connecting to:', this.signalingServer);
+            this.ws = io(this.signalingServer, {
+                transports: ['websocket', 'polling'],
+                timeout: 20000,
+                reconnection: true,
+                reconnectionDelay: 1000,
+                reconnectionAttempts: 5
             });
             
             this.ws.on('connect', () => {
