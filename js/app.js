@@ -542,6 +542,16 @@ class SprintTimerApp {
                 // Show room code modal IMMEDIATELY
                 console.log('[App] Showing room code modal...');
                 this.showRoomCodeDisplay(this.roomCode);
+                
+                // ALSO show inline (backup)
+                const inlineDisplay = document.getElementById('room-code-display-inline');
+                const inlineValue = document.getElementById('room-code-value-inline');
+                if (inlineDisplay && inlineValue) {
+                    inlineValue.textContent = this.roomCode;
+                    inlineDisplay.style.display = 'block';
+                    console.log('[App] Inline room code shown');
+                }
+                
                 console.log('[App] Room code modal shown');
                 
                 // Wait for all other phones
