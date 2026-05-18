@@ -7,6 +7,7 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
@@ -23,9 +24,13 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files (frontend)
-const path = require('path');
+// Serve static files (frontend) - serve from parent directory
 app.use(express.static(path.join(__dirname, '..')));
+
+// Fallback to index.html for SPA
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
 
 // Store connected clients and rooms
 const clients = new Map();
