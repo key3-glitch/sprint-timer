@@ -29,14 +29,16 @@ class ConnectionManager {
             return customServer;
         }
         
-        // Auto-detect: use current host if not localhost
+        // Auto-detect: use current host
+        const protocol = window.location.protocol; // http: or https:
         const hostname = window.location.hostname;
+        const port = window.location.port;
         
         if (hostname === 'localhost' || hostname === '127.0.0.1') {
             return 'http://localhost:3000';
         } else {
-            // Mobile: use same host with port 3000
-            return `http://${hostname}:3000`;
+            // Production: use same protocol and host (Render serves on same port)
+            return `${protocol}//${hostname}${port ? ':' + port : ''}`;
         }
     }
 

@@ -371,20 +371,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>📱 Oda Kodu</h3>
-                <p>Finish telefonu ile QR kodu tarayın veya kodu girin</p>
+                <p>Bu kodu Finish telefonuna söyleyin</p>
             </div>
             <div class="modal-body">
-                <!-- QR Code Display -->
-                <div class="qr-code-container">
-                    <canvas id="qr-code-canvas"></canvas>
-                </div>
-                
                 <!-- Room Code Display -->
                 <div class="room-code-display">
                     <div class="room-code-value" id="room-code-display">0000</div>
                 </div>
                 
-                <p class="input-hint">Finish telefonu QR kodu tarayarak veya kodu girerek bağlanacak</p>
+                <p class="input-hint">Finish telefonu bu kodu girerek bağlanacak</p>
                 <div class="waiting-indicator">
                     <div class="spinner"></div>
                     <p>Finish telefonu bekleniyor...</p>
@@ -399,22 +394,9 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🔗 Odaya Bağlan</h3>
-                <p>QR kodu tarayın veya oda kodunu girin</p>
+                <p>Start telefonundaki 4 haneli kodu girin</p>
             </div>
             <div class="modal-body">
-                <!-- QR Scanner -->
-                <div class="qr-scanner-container" id="qr-scanner-container">
-                    <div id="qr-reader"></div>
-                    <button id="stop-qr-scan-btn" class="btn btn-secondary">
-                        Taramayı Durdur
-                    </button>
-                </div>
-                
-                <!-- OR Divider -->
-                <div class="or-divider">
-                    <span>VEYA</span>
-                </div>
-                
                 <!-- Manual Code Input -->
                 <div class="room-code-input-container">
                     <input type="tel" 
@@ -432,9 +414,6 @@
                 <button id="room-code-cancel-btn" class="btn btn-secondary btn-large">
                     İptal
                 </button>
-                <button id="scan-qr-btn" class="btn btn-success btn-large">
-                    📷 QR Tara
-                </button>
                 <button id="room-code-submit-btn" class="btn btn-primary btn-large">
                     Bağlan
                 </button>
@@ -447,10 +426,6 @@
 
     <!-- Socket.IO Client -->
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-    
-    <!-- QR Code Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
     <!-- Scripts -->
     <script src="js/timer.js"></script>

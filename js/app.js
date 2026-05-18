@@ -676,33 +676,13 @@ class SprintTimerApp {
     }
     
     /**
-     * Show room code display modal with QR code (Phone 1)
+     * Show room code display modal (Start Phone)
      */
     showRoomCodeDisplay(roomCode) {
         const modal = document.getElementById('room-code-display-modal');
         const codeDisplay = document.getElementById('room-code-display');
-        const qrCanvas = document.getElementById('qr-code-canvas');
         
         codeDisplay.textContent = roomCode;
-        
-        // Generate QR code
-        if (window.QRCode) {
-            QRCode.toCanvas(qrCanvas, roomCode, {
-                width: 250,
-                margin: 2,
-                color: {
-                    dark: '#1a73e8',
-                    light: '#ffffff'
-                }
-            }, (error) => {
-                if (error) {
-                    console.error('[App] QR code generation error:', error);
-                } else {
-                    console.log('[App] QR code generated successfully');
-                }
-            });
-        }
-        
         modal.classList.add('active');
         
         console.log('[App] Room code display shown:', roomCode);
@@ -717,7 +697,7 @@ class SprintTimerApp {
     }
     
     /**
-     * Show room code input modal with QR scanner (Finish Phone)
+     * Show room code input modal (Finish Phone)
      */
     showRoomCodeInput() {
         return new Promise((resolve, reject) => {
@@ -725,11 +705,6 @@ class SprintTimerApp {
             const input = document.getElementById('room-code-input');
             const submitBtn = document.getElementById('room-code-submit-btn');
             const cancelBtn = document.getElementById('room-code-cancel-btn');
-            const scanQrBtn = document.getElementById('scan-qr-btn');
-            const stopQrBtn = document.getElementById('stop-qr-scan-btn');
-            const qrScannerContainer = document.getElementById('qr-scanner-container');
-            
-            let html5QrCode = null;
             
             // Clear previous input
             input.value = '';
@@ -745,59 +720,6 @@ class SprintTimerApp {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
             };
             
-            // QR Scanner
-            const startQrScanner = async () => {
-                try {
-                    qrScannerContainer.classList.add('active');
-                    scanQrBtn.style.display = 'none';
-                    
-                    if (!html5QrCode) {
-                        html5QrCode = new Html5Qrcode("qr-reader");
-                    }
-                    
-                    await html5QrCode.start(
-                        { facingMode: "environment" },
-                        {
-                            fps: 10,
-                            qrbox: { width: 250, height: 250 }
-                        },
-                        (decodedText) => {
-                            console.log('[App] QR code scanned:', decodedText);
-                            
-                            // Validate room code (4 digits)
-                            if (/^\d{4}$/.test(decodedText)) {
-                                stopQrScanner();
-                                cleanup();
-                                modal.classList.remove('active');
-                                resolve(decodedText);
-                            } else {
-                                this.ui.showToast('Geçersiz QR kod', 'error');
-                            }
-                        }
-                    );
-                    
-                    console.log('[App] QR scanner started');
-                } catch (error) {
-                    console.error('[App] QR scanner error:', error);
-                    this.ui.showToast('Kamera erişimi reddedildi', 'error');
-                    qrScannerContainer.classList.remove('active');
-                    scanQrBtn.style.display = 'block';
-                }
-            };
-            
-            const stopQrScanner = async () => {
-                if (html5QrCode && html5QrCode.isScanning) {
-                    try {
-                        await html5QrCode.stop();
-                        console.log('[App] QR scanner stopped');
-                    } catch (error) {
-                        console.error('[App] QR scanner stop error:', error);
-                    }
-                }
-                qrScannerContainer.classList.remove('active');
-                scanQrBtn.style.display = 'block';
-            };
-            
             // Submit handler
             const handleSubmit = () => {
                 const code = input.value.trim();
@@ -808,7 +730,6 @@ class SprintTimerApp {
                     return;
                 }
                 
-                stopQrScanner();
                 cleanup();
                 modal.classList.remove('active');
                 resolve(code);
@@ -816,7 +737,6 @@ class SprintTimerApp {
             
             // Cancel handler
             const handleCancel = () => {
-                stopQrScanner();
                 cleanup();
                 modal.classList.remove('active');
                 reject(new Error('Kullanıcı iptal etti'));
@@ -826,16 +746,12 @@ class SprintTimerApp {
             const cleanup = () => {
                 submitBtn.onclick = null;
                 cancelBtn.onclick = null;
-                scanQrBtn.onclick = null;
-                stopQrBtn.onclick = null;
                 input.onkeypress = null;
             };
             
             // Attach handlers
             submitBtn.onclick = handleSubmit;
             cancelBtn.onclick = handleCancel;
-            scanQrBtn.onclick = startQrScanner;
-            stopQrBtn.onclick = stopQrScanner;
             
             // Enter key to submit
             input.onkeypress = (e) => {
