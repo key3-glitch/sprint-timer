@@ -1,0 +1,26 @@
+{
+  "name": "sprint-timer",
+  "version": "1.0.0",
+  "description": "Multi-phone sprint timing system with motion detection",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "keywords": [
+    "sprint",
+    "timer",
+    "athletics",
+    "motion-detection"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

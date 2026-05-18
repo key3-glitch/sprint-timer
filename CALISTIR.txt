@@ -1,0 +1,77 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         SPORCU KRONOMETRE - ÇALIŞTIRMA TALİMATLARI          ║
+╚═══════════════════════════════════════════════════════════════╝
+
+✅ WEB SUNUCUSU ÇALIŞIYOR!
+
+📱 TARAYICIDA AÇIN:
+
+   Telefon 1 (Başlangıç - 0m):
+   ➜ http://localhost:8000?phone=1
+
+   Telefon 2 (Bitiş - 30m):
+   ➜ http://localhost:8000?phone=2
+
+
+🌐 DİĞER CİHAZLARDAN ERİŞİM:
+
+   1. Bilgisayarınızın IP adresini öğrenin:
+      Windows: ipconfig
+      Mac/Linux: ifconfig
+
+   2. Telefonda tarayıcıyı açın:
+      http://[IP-ADRESI]:8000?phone=1
+      Örnek: http://192.168.1.100:8000?phone=1
+
+
+🛑 SUNUCUYU DURDURMAK İÇİN:
+
+   Terminal penceresinde: Ctrl + C
+
+
+🔄 SUNUCUYU YENİDEN BAŞLATMAK İÇİN:
+
+   python -m http.server 8000
+
+
+📋 KULLANIM ADIMLARI:
+
+   1. Her iki telefonda da uygulamayı açın
+   2. Kamera izni verin
+   3. Bağlantı otomatik kurulacak
+   4. "HAZIRLA" butonuna basın (10 saniye önceden)
+   5. Sporcu koşsun - otomatik başlar ve durur!
+
+
+⚠️  ÖNEMLİ NOTLAR:
+
+   • Kamera erişimi için web sunucusu ZORUNLU
+   • Her iki telefon da AYNI WiFi ağında olmalı
+   • İlk açılışta kamera izni verin
+   • HTTPS veya localhost gerekli
+
+
+🆘 SORUN GİDERME:
+
+   Kamera açılmıyor:
+   ➜ Tarayıcı izinlerini kontrol edin
+   ➜ Sayfayı yenileyin (F5)
+
+   Bağlantı kurulamıyor:
+   ➜ Her iki telefon da aynı WiFi'de mi?
+   ➜ Firewall kapalı mı?
+
+   Hareket algılanmıyor:
+   ➜ Aydınlatmayı iyileştirin
+   ➜ Kamerayı çizgiye doğrultun
+
+
+📚 DAHA FAZLA BİLGİ:
+
+   README.md - Proje dokümantasyonu
+   BASLANGIC.md - Detaylı başlangıç rehberi
+
+
+🎉 İYİ KOŞULAR! 🏃‍♂️💨
+
+═══════════════════════════════════════════════════════════════

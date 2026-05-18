@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a73e8">
+    <title>Sporcu Kronometre - Sprint Timer</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="assets/icons/icon-192.svg">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.svg">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- App Container -->
+    <div id="app" class="app-container">
+        
+        <!-- 1. SPLASH SCREEN -->
+        <div id="splash-screen" class="screen active">
+            <div class="splash-content">
+                <div class="logo">⏱️</div>
+                <h1>Sporcu Kronometre</h1>
+                <p>Sprint Timer System</p>
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+
+        <!-- 2. CONNECTION SCREEN -->
+        <div id="connection-screen" class="screen">
+            <div class="screen-content">
+                <div class="status-icon">📱</div>
+                <h2>Sistem Kurulumu</h2>
+                <p class="status-text">Bu telefon hangi konumda?</p>
+                
+                <!-- Simple 2-Phone Selection (Default) -->
+                <div class="simple-phone-selection" id="simple-phone-selection">
+                    <button class="role-btn" data-role="start">
+                        <span class="role-icon">🏁</span>
+                        <span class="role-name">Start Telefonu</span>
+                        <span class="role-desc">Başlangıç Çizgisi (0m)</span>
+                    </button>
+                    <button class="role-btn" data-role="finish">
+                        <span class="role-icon">🎯</span>
+                        <span class="role-name">Finish Telefonu</span>
+                        <span class="role-desc">Bitiş Çizgisi</span>
+                    </button>
+                    
+                    <button class="btn btn-secondary btn-settings" id="advanced-settings-btn">
+                        ⚙️ Gelişmiş Ayarlar (3+ Telefon)
+                    </button>
+                </div>
+                
+                <!-- Advanced Phone Count Selection (Hidden by default) -->
+                <div class="phone-count-selection" id="phone-count-selection" style="display: none;">
+                    <button class="btn btn-back" id="back-to-simple-btn">← Geri</button>
+                    <h3>Kaç telefon kullanacaksınız?</h3>
+                    <button class="phone-count-btn" data-count="2">
+                        <span class="count-number">2</span>
+                        <span class="count-label">Telefon</span>
+                        <span class="count-desc">Start + Finish</span>
+                    </button>
+                    <button class="phone-count-btn" data-count="3">
+                        <span class="count-number">3</span>
+                        <span class="count-label">Telefon</span>
+                        <span class="count-desc">Start + 1 Ara + Finish</span>
+                    </button>
+                    <button class="phone-count-btn" data-count="4">
+                        <span class="count-number">4</span>
+                        <span class="count-label">Telefon</span>
+                        <span class="count-desc">Start + 2 Ara + Finish</span>
+                    </button>
+                    <button class="phone-count-btn" data-count="5">
+                        <span class="count-number">5</span>
+                        <span class="count-label">Telefon</span>
+                        <span class="count-desc">Start + 3 Ara + Finish</span>
+                    </button>
+                </div>
+                
+                <!-- Distance Configuration -->
+                <div class="distance-config" id="distance-config" style="display: none;">
+                    <h3>Mesafe Ayarları</h3>
+                    <p class="config-hint">Her telefon için mesafeyi metre cinsinden girin</p>
+                    <div id="distance-inputs-container"></div>
+                    <button id="confirm-distances-btn" class="btn btn-primary btn-large">
+                        Devam Et
+                    </button>
+                </div>
+                
+                <!-- Phone Role Selection -->
+                <div class="phone-selection" style="display: none;">
+                    <h3 id="role-selection-title">Bu Telefon Hangi Konumda?</h3>
+                    <div id="role-buttons-container"></div>
+                </div>
+
+                <div class="connection-info" style="display: none;" id="connecting-info">
+                    <div class="status-icon">🔗</div>
+                    <h3>Bağlantı Kuruluyor</h3>
+                    <p class="status-text">Diğer telefonlara bağlanılıyor...</p>
+                    <div class="connection-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="connection-progress"></div>
+                        </div>
+                        <p class="progress-text" id="connection-status">Başlatılıyor...</p>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Telefon:</span>
+                        <span class="value" id="phone-role">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Bağlantı:</span>
+                        <span class="value" id="connection-type">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. IDLE SCREEN -->
+        <div id="idle-screen" class="screen">
+            <div class="screen-content">
+                <div class="status-header">
+                    <div class="status-badge success">
+                        <span class="badge-icon">✓</span>
+                        <span class="badge-text">Bağlı</span>
+                    </div>
+                </div>
+
+                <div class="sync-status">
+                    <div class="sync-icon">🎯</div>
+                    <h3>Senkronizasyon</h3>
+                    <div class="sync-quality">
+                        <span class="quality-label">Hassasiyet:</span>
+                        <span class="quality-value" id="sync-accuracy">±10ms</span>
+                    </div>
+                    <div class="sync-details">
+                        <div class="detail-item">
+                            <span class="label">Gecikme:</span>
+                            <span class="value" id="latency-value">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Son Senkr.:</span>
+                            <span class="value" id="last-sync">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="phone-info">
+                    <div class="info-card">
+                        <div class="card-icon">📱</div>
+                        <div class="card-content">
+                            <h4 id="phone-position">Telefon 1</h4>
+                            <p id="phone-location">Başlangıç Çizgisi (0m)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="prepare-btn" class="btn btn-primary btn-large">
+                    <span class="btn-icon">🏁</span>
+                    <span class="btn-text">HAZIRLA</span>
+                </button>
+
+                <div class="action-buttons">
+                    <button id="settings-btn" class="btn btn-icon-only">⚙️</button>
+                    <button id="history-btn" class="btn btn-icon-only">📊</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. PREPARATION SCREEN -->
+        <div id="preparation-screen" class="screen">
+            <div class="screen-content">
+                <div class="preparation-header">
+                    <h2>Hazırlanıyor...</h2>
+                    <p>Sistem kalibre ediliyor</p>
+                </div>
+
+                <div class="countdown-circle">
+                    <svg class="countdown-svg" viewBox="0 0 200 200">
+                        <circle class="countdown-bg" cx="100" cy="100" r="90"></circle>
+                        <circle class="countdown-progress" cx="100" cy="100" r="90" id="countdown-circle"></circle>
+                    </svg>
+                    <div class="countdown-number" id="countdown-number">10</div>
+                </div>
+
+                <div class="preparation-status">
+                    <div class="status-item">
+                        <span class="status-icon">📹</span>
+                        <span class="status-label">Kamera</span>
+                        <span class="status-value" id="camera-status">Hazırlanıyor...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">🔄</span>
+                        <span class="status-label">Senkronizasyon</span>
+                        <span class="status-value" id="sync-status">Kalibrasyon...</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-icon">🎯</span>
+                        <span class="status-label">Hassasiyet</span>
+                        <span class="status-value" id="precision-status">±5ms</span>
+                    </div>
+                </div>
+
+                <button id="cancel-preparation-btn" class="btn btn-secondary">
+                    İptal
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. READY SCREEN -->
+        <div id="ready-screen" class="screen">
+            <div class="screen-content">
+                <div class="ready-header">
+                    <div class="ready-icon">🟢</div>
+                    <h2>HAZIR!</h2>
+                    <p>Sporcu bekleniyor...</p>
+                </div>
+
+                <!-- Camera Preview -->
+                <div class="camera-container">
+                    <video id="camera-preview" autoplay playsinline></video>
+                    <canvas id="camera-canvas" style="display: none;"></canvas>
+                    
+                    <!-- Detection Line Overlay -->
+                    <div class="detection-line">
+                        <div class="line-label" id="line-label">Başlangıç Çizgisi</div>
+                    </div>
+                </div>
+
+                <div class="ready-info">
+                    <div class="info-badge">
+                        <span class="badge-icon">✓</span>
+                        <span class="badge-text">Sistem Hazır</span>
+                    </div>
+                    <div class="info-badge">
+                        <span class="badge-icon">📹</span>
+                        <span class="badge-text">Kamera Aktif</span>
+                    </div>
+                </div>
+
+                <button id="cancel-ready-btn" class="btn btn-secondary">
+                    İptal
+                </button>
+            </div>
+        </div>
+
+        <!-- 6. RUNNING SCREEN -->
+        <div id="running-screen" class="screen">
+            <div class="screen-content">
+                <div class="running-header">
+                    <div class="running-icon" id="running-icon">✅</div>
+                    <h2 id="running-title">BAŞLADI!</h2>
+                    <p id="running-subtitle">Sinyal gönderildi</p>
+                </div>
+
+                <div class="timer-display">
+                    <div class="timer-value" id="live-timer">0.00</div>
+                    <div class="timer-unit">saniye</div>
+                </div>
+
+                <div class="running-status">
+                    <div class="status-message" id="running-message">
+                        Bitiş bekleniyor...
+                    </div>
+                </div>
+
+                <!-- Camera Preview (smaller) -->
+                <div class="camera-container small">
+                    <video id="camera-preview-running" autoplay playsinline></video>
+                    <div class="detection-line"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. RESULT SCREEN -->
+        <div id="result-screen" class="screen">
+            <div class="screen-content">
+                <div class="result-header">
+                    <div class="result-icon">🏁</div>
+                    <h2>BİTTİ!</h2>
+                </div>
+
+                <div class="result-time">
+                    <div class="time-value" id="result-time">4.35</div>
+                    <div class="time-unit">saniye</div>
+                </div>
+
+                <!-- Split Times -->
+                <div class="split-times" id="split-times-container" style="display: none;">
+                    <h3>Split Zamanları</h3>
+                    <div id="split-times-list"></div>
+                </div>
+
+                <!-- Race Photos (All phones - dynamically populated) -->
+                <div class="race-photos">
+                    <!-- Photos will be added dynamically by displayAllPhotos() -->
+                </div>
+
+                <div class="result-details">
+                    <div class="detail-row">
+                        <span class="label">Hassasiyet:</span>
+                        <span class="value" id="result-accuracy">±5ms</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Mesafe:</span>
+                        <span class="value">30m</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Tarih:</span>
+                        <span class="value" id="result-date">-</span>
+                    </div>
+                </div>
+
+                <div class="athlete-info">
+                    <input type="text" id="athlete-name" class="input-field" placeholder="Sporcu adı (opsiyonel)">
+                    <textarea id="race-notes" class="input-field" placeholder="Notlar (opsiyonel)" rows="2"></textarea>
+                </div>
+
+                <div class="result-actions">
+                    <button id="save-result-btn" class="btn btn-primary">
+                        <span class="btn-icon">💾</span>
+                        <span class="btn-text">Kaydet</span>
+                    </button>
+                    <button id="download-pdf-btn" class="btn btn-secondary">
+                        <span class="btn-icon">📄</span>
+                        <span class="btn-text">PDF İndir</span>
+                    </button>
+                </div>
+
+                <!-- Finish Phone Controls -->
+                <div id="finish-controls" style="display: none;">
+                    <button id="restart-race-btn" class="btn btn-success btn-large">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">YENİDEN BAŞLAT</span>
+                    </button>
+                    
+                    <button id="end-session-btn" class="btn btn-danger">
+                        <span class="btn-icon">🚪</span>
+                        <span class="btn-text">Odayı Sonlandır</span>
+                    </button>
+                </div>
+                
+                <!-- Non-Finish Phone Message -->
+                <div id="waiting-restart-message" style="display: none;" class="waiting-message">
+                    <div class="waiting-icon">⏳</div>
+                    <h3>Finish Telefonunu Bekliyor</h3>
+                    <p>Yeni koşu için Finish telefonundan "YENİDEN BAŞLAT" butonuna basılmasını bekleyin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR SCREEN -->
+        <div id="error-screen" class="screen">
+            <div class="screen-content">
+                <div class="error-icon">⚠️</div>
+                <h2>Hata Oluştu</h2>
+                <p class="error-message" id="error-message">Bir şeyler yanlış gitti.</p>
+                <button id="retry-btn" class="btn btn-primary">Tekrar Dene</button>
+                <button id="back-btn" class="btn btn-secondary">Geri Dön</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Room Code Display Modal (for Start Phone) -->
+    <div id="room-code-display-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📱 Oda Kodu</h3>
+                <p>Finish telefonu ile QR kodu tarayın veya kodu girin</p>
+            </div>
+            <div class="modal-body">
+                <!-- QR Code Display -->
+                <div class="qr-code-container">
+                    <canvas id="qr-code-canvas"></canvas>
+                </div>
+                
+                <!-- Room Code Display -->
+                <div class="room-code-display">
+                    <div class="room-code-value" id="room-code-display">0000</div>
+                </div>
+                
+                <p class="input-hint">Finish telefonu QR kodu tarayarak veya kodu girerek bağlanacak</p>
+                <div class="waiting-indicator">
+                    <div class="spinner"></div>
+                    <p>Finish telefonu bekleniyor...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Code Input Modal (for Finish Phone) -->
+    <div id="room-code-modal" class="modal">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔗 Odaya Bağlan</h3>
+                <p>QR kodu tarayın veya oda kodunu girin</p>
+            </div>
+            <div class="modal-body">
+                <!-- QR Scanner -->
+                <div class="qr-scanner-container" id="qr-scanner-container">
+                    <div id="qr-reader"></div>
+                    <button id="stop-qr-scan-btn" class="btn btn-secondary">
+                        Taramayı Durdur
+                    </button>
+                </div>
+                
+                <!-- OR Divider -->
+                <div class="or-divider">
+                    <span>VEYA</span>
+                </div>
+                
+                <!-- Manual Code Input -->
+                <div class="room-code-input-container">
+                    <input type="tel" 
+                           id="room-code-input" 
+                           class="room-code-input" 
+                           maxlength="4" 
+                           pattern="[0-9]*"
+                           inputmode="numeric"
+                           placeholder="0000"
+                           autocomplete="off">
+                </div>
+                <p class="input-hint">Start telefonunda görünen 4 haneli kodu girin</p>
+            </div>
+            <div class="modal-footer">
+                <button id="room-code-cancel-btn" class="btn btn-secondary btn-large">
+                    İptal
+                </button>
+                <button id="scan-qr-btn" class="btn btn-success btn-large">
+                    📷 QR Tara
+                </button>
+                <button id="room-code-submit-btn" class="btn btn-primary btn-large">
+                    Bağlan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    
+    <!-- QR Code Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <!-- Scripts -->
+    <script src="js/timer.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/connection.js"></script>
+    <script src="js/detector.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('Service Worker registered', reg))
+                .catch(err => console.log('Service Worker registration failed', err));
+        }
+    </script>
+</body>
+</html>
