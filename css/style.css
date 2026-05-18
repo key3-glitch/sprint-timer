@@ -1070,59 +1070,60 @@ body {
 }
 
 
-/* Race Photos (Start & Finish) - Smaller and scrollable */
+/* Race Photos (Start & Finish) - Much smaller and scrollable */
 .race-photos {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: var(--spacing-sm);
-    margin: var(--spacing-md) 0;
-    max-height: 300px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-xs);
+    margin: var(--spacing-sm) 0;
+    max-height: 200px;
     overflow-y: auto;
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
 }
 
 .photo-item {
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     overflow: hidden;
     box-shadow: var(--shadow-sm);
-    background: var(--bg-secondary);
-    padding: var(--spacing-xs);
+    background: white;
+    padding: 4px;
 }
 
 .photo-item img {
     width: 100%;
-    height: auto;
-    max-height: 150px;
+    height: 80px;
     object-fit: cover;
     display: block;
-    border-radius: var(--radius-sm);
+    border-radius: 4px;
 }
 
 .photo-caption {
     text-align: center;
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-secondary);
-    margin-top: var(--spacing-xs);
+    margin-top: 2px;
     font-weight: 600;
 }
 
 .photo-time {
     text-align: center;
-    font-size: 12px;
+    font-size: 10px;
     color: var(--primary-color);
-    margin-top: var(--spacing-xs);
+    margin-top: 2px;
     font-weight: 700;
 }
 
-/* Mobile: Smaller photos */
+/* Mobile: Even smaller */
 @media (max-width: 480px) {
     .race-photos {
         grid-template-columns: repeat(2, 1fr);
-        max-height: 250px;
+        max-height: 180px;
     }
     
     .photo-item img {
-        max-height: 120px;
+        height: 70px;
     }
 }
 
