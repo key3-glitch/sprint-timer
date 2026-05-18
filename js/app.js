@@ -539,8 +539,10 @@ class SprintTimerApp {
                 localStorage.setItem('roomCode', this.roomCode);
                 localStorage.setItem('distances', JSON.stringify(this.distances));
                 
-                // Show room code modal
+                // Show room code modal IMMEDIATELY
+                console.log('[App] Showing room code modal...');
                 this.showRoomCodeDisplay(this.roomCode);
+                console.log('[App] Room code modal shown');
                 
                 // Wait for all other phones
                 this.ui.updateConnectionProgress(80, `${this.phoneCount - 1} telefon bekleniyor...`);
@@ -679,13 +681,26 @@ class SprintTimerApp {
      * Show room code display modal (Start Phone)
      */
     showRoomCodeDisplay(roomCode) {
+        console.log('[App] showRoomCodeDisplay called with code:', roomCode);
+        
         const modal = document.getElementById('room-code-display-modal');
         const codeDisplay = document.getElementById('room-code-display');
+        
+        if (!modal) {
+            console.error('[App] Modal element not found!');
+            return;
+        }
+        
+        if (!codeDisplay) {
+            console.error('[App] Code display element not found!');
+            return;
+        }
         
         codeDisplay.textContent = roomCode;
         modal.classList.add('active');
         
         console.log('[App] Room code display shown:', roomCode);
+        console.log('[App] Modal classes:', modal.className);
     }
     
     /**
