@@ -91,6 +91,8 @@ body {
 .screen-content {
     width: 100%;
     max-width: 500px;
+    max-height: 100vh;
+    overflow-y: auto;
     padding: var(--spacing-lg);
     text-align: center;
 }
@@ -1068,49 +1070,59 @@ body {
 }
 
 
-/* Race Photos (Start & Finish) */
+/* Race Photos (Start & Finish) - Smaller and scrollable */
 .race-photos {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: var(--spacing-md);
-    margin: var(--spacing-lg) 0;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
 }
 
 .photo-item {
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     overflow: hidden;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
     background: var(--bg-secondary);
-    padding: var(--spacing-sm);
+    padding: var(--spacing-xs);
 }
 
 .photo-item img {
     width: 100%;
     height: auto;
+    max-height: 150px;
+    object-fit: cover;
     display: block;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
 }
 
 .photo-caption {
     text-align: center;
-    font-size: 12px;
+    font-size: 10px;
     color: var(--text-secondary);
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
     font-weight: 600;
 }
 
 .photo-time {
     text-align: center;
-    font-size: 14px;
+    font-size: 12px;
     color: var(--primary-color);
     margin-top: var(--spacing-xs);
     font-weight: 700;
 }
 
-/* Mobile: Stack photos vertically on small screens */
+/* Mobile: Smaller photos */
 @media (max-width: 480px) {
     .race-photos {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        max-height: 250px;
+    }
+    
+    .photo-item img {
+        max-height: 120px;
     }
 }
 
