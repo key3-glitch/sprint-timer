@@ -177,12 +177,15 @@ class SprintTimerApp {
             this.ui.updateConnectionProgress(20, 'Bağlantı kuruluyor...');
             
             // Connect to server
+            this.ui.showToast('Sunucuya bağlanılıyor...', 'info');
             const connectionType = await this.connection.connect(false);
             this.ui.updateConnectionInfo(phoneRole, connectionType.toUpperCase());
             this.ui.updateConnectionProgress(50, 'Bağlantı kuruldu');
             
             // Join room
             this.ui.updateConnectionProgress(60, 'Odaya katılınıyor...');
+            this.ui.showToast(`Oda kodu: ${roomCode}`, 'info');
+            
             const roomData = await this.connection.joinRoom(roomCode);
             
             // Get room configuration
@@ -199,6 +202,7 @@ class SprintTimerApp {
             await this.sync.initialize(false);
             
             this.ui.updateConnectionProgress(100, 'Hazır!');
+            this.ui.showToast('Bağlantı başarılı!', 'success');
             
             // Wait a moment
             await this.sleep(500);
@@ -208,10 +212,23 @@ class SprintTimerApp {
             
         } catch (error) {
             console.error('[App] Join room failed:', error);
-            this.ui.showError(`Odaya katılma hatası: ${error.message}`);
+            
+            // Show user-friendly error message
+            let errorMsg = 'Bağlantı hatası';
+            if (error.message.includes('Zaman aşımı')) {
+                errorMsg = 'Sunucu yanıt vermiyor. Lütfen tekrar deneyin.';
+            } else if (error.message.includes('Sunucuya bağlı değil')) {
+                errorMsg = 'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.';
+            } else if (error.message.includes('Oda bulunamadı')) {
+                errorMsg = 'Oda bulunamadı. Kodu kontrol edin.';
+            } else {
+                errorMsg = `Hata: ${error.message}`;
+            }
+            
+            this.ui.showError(errorMsg);
             
             // Reset and show selection again
-            await this.sleep(2000);
+            await this.sleep(3000);
             this.showPhoneSelection();
         }
     }

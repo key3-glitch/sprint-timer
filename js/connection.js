@@ -96,11 +96,18 @@ class ConnectionManager {
     joinRoom(roomCode, role) {
         return new Promise((resolve, reject) => {
             if (!this.ws) {
-                reject(new Error('Not connected'));
+                reject(new Error('Sunucuya bağlı değil'));
                 return;
             }
             
+            // Set timeout for join room (30 seconds)
+            const timeout = setTimeout(() => {
+                reject(new Error('Zaman aşımı - Sunucu yanıt vermiyor'));
+            }, 30000);
+            
             this.ws.emit('join-room', { roomCode, role }, (response) => {
+                clearTimeout(timeout);
+                
                 if (response.success) {
                     console.log(`[Connection] Joined room: ${response.roomCode}`);
                     // Return room configuration (distances, phoneCount)
@@ -109,7 +116,9 @@ class ConnectionManager {
                         phoneCount: response.phoneCount
                     });
                 } else {
-                    reject(new Error(response.error || 'Failed to join room'));
+                    const errorMsg = response.error || 'Odaya katılınamadı';
+                    console.error(`[Connection] Join room failed: ${errorMsg}`);
+                    reject(new Error(errorMsg));
                 }
             });
         });
