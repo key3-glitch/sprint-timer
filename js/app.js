@@ -1723,36 +1723,32 @@ class SprintTimerApp {
             console.log('[App] Finish phone controls setup complete');
             
         } else {
-            // OTHER PHONES: Show waiting message
+            // OTHER PHONES (including START): Show waiting message
             document.getElementById('finish-controls').style.display = 'none';
             document.getElementById('waiting-restart-message').style.display = 'block';
             
             // Setup RESTART and END_SESSION listeners (only once)
-            const restartHandler = (message) => {
-                if (message.type === 'RESTART') {
-                    console.log(`[App] ${this.getRoleDisplayName()}: Received RESTART signal`);
-                    this.handleRestart();
-                }
-            };
-            
-            const endSessionHandler = (message) => {
-                if (message.type === 'END_SESSION') {
-                    console.log(`[App] ${this.getRoleDisplayName()}: Received END_SESSION signal`);
-                    this.handleEndSession();
-                }
-            };
-            
-            // Remove old listeners if any
-            this.connection.off('message', this._restartHandler);
-            this.connection.off('message', this._endSessionHandler);
-            
-            // Store handlers for cleanup
-            this._restartHandler = restartHandler;
-            this._endSessionHandler = endSessionHandler;
-            
-            // Add new listeners
-            this.connection.on('message', restartHandler);
-            this.connection.on('message', endSessionHandler);
+            if (!this._restartHandler) {
+                this._restartHandler = (message) => {
+                    if (message.type === 'RESTART') {
+                        console.log(`[App] ${this.getRoleDisplayName()}: Received RESTART signal`);
+                        this.handleRestart();
+                    }
+                };
+                
+                this._endSessionHandler = (message) => {
+                    if (message.type === 'END_SESSION') {
+                        console.log(`[App] ${this.getRoleDisplayName()}: Received END_SESSION signal`);
+                        this.handleEndSession();
+                    }
+                };
+                
+                // Add listeners
+                this.connection.on('message', this._restartHandler);
+                this.connection.on('message', this._endSessionHandler);
+                
+                console.log(`[App] ${this.getRoleDisplayName()}: RESTART/END_SESSION listeners setup`);
+            }
         }
     }
     
