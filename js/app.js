@@ -995,8 +995,8 @@ class SprintTimerApp {
                 '±5ms'
             );
             
-            // Play countdown beep (short beep for 5,4,3,2,1)
-            this.playBeep(200, 800, 0.3); // 200ms, 800Hz, volume 0.3
+            // Play countdown beep (short beep, LOUDER)
+            this.playBeep(200, 800, 0.7); // 200ms, 800Hz, volume 0.7 (YÜKSEK)
             
             await this.sleep(1000);
         }
@@ -1008,8 +1008,8 @@ class SprintTimerApp {
         if (syncResult) {
             this.ui.updatePreparationStatus('Hazır ✓', 'Tamamlandı ✓', syncResult.accuracy);
             
-            // Play long ready beep (1 second, lower pitch)
-            this.playBeep(1000, 600, 0.5); // 1000ms, 600Hz, volume 0.5
+            // Play long ready beep (1 second, MUCH LOUDER)
+            this.playBeep(1000, 600, 1.0); // 1000ms, 600Hz, volume 1.0 (MAKSİMUM)
             
             await this.sleep(500);
             
@@ -1024,9 +1024,9 @@ class SprintTimerApp {
      * Play audio beep
      * @param {number} duration - Duration in milliseconds
      * @param {number} frequency - Frequency in Hz (default 800)
-     * @param {number} volume - Volume 0-1 (default 0.3)
+     * @param {number} volume - Volume 0-1 (default 0.7)
      */
-    playBeep(duration = 200, frequency = 800, volume = 0.3) {
+    playBeep(duration = 200, frequency = 800, volume = 0.7) {
         try {
             // Create audio context
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1051,7 +1051,7 @@ class SprintTimerApp {
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + duration / 1000);
             
-            console.log(`[App] Beep played: ${duration}ms, ${frequency}Hz`);
+            console.log(`[App] Beep played: ${duration}ms, ${frequency}Hz, volume ${volume}`);
         } catch (error) {
             console.error('[App] Audio beep failed:', error);
         }
