@@ -986,7 +986,7 @@ class SprintTimerApp {
             console.log('[App] Finish Phone: PREPARE signal sent to Start phone');
         }
         
-        // Start countdown (5 seconds)
+        // Start countdown (5 seconds) with audio beeps
         for (let i = 5; i > 0; i--) {
             this.ui.updateCountdown(i);
             this.ui.updatePreparationStatus(
@@ -994,6 +994,10 @@ class SprintTimerApp {
                 i > 2 ? 'Kalibrasyon...' : 'Tamamlandı ✓',
                 '±5ms'
             );
+            
+            // Play countdown beep (short beep for 5,4,3,2,1)
+            this.playBeep(200, 800, 0.3); // 200ms, 800Hz, volume 0.3
+            
             await this.sleep(1000);
         }
         
@@ -1003,12 +1007,53 @@ class SprintTimerApp {
         
         if (syncResult) {
             this.ui.updatePreparationStatus('Hazır ✓', 'Tamamlandı ✓', syncResult.accuracy);
+            
+            // Play long ready beep (1 second, lower pitch)
+            this.playBeep(1000, 600, 0.5); // 1000ms, 600Hz, volume 0.5
+            
             await this.sleep(500);
             
             // Go to ready screen
             this.goToReadyScreen();
         } else {
             this.ui.showError('Senkronizasyon başarısız');
+        }
+    }
+    
+    /**
+     * Play audio beep
+     * @param {number} duration - Duration in milliseconds
+     * @param {number} frequency - Frequency in Hz (default 800)
+     * @param {number} volume - Volume 0-1 (default 0.3)
+     */
+    playBeep(duration = 200, frequency = 800, volume = 0.3) {
+        try {
+            // Create audio context
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // Create oscillator (tone generator)
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            // Connect nodes
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Configure oscillator
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'sine'; // Smooth sine wave
+            
+            // Configure volume with fade out
+            gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            
+            // Play
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration / 1000);
+            
+            console.log(`[App] Beep played: ${duration}ms, ${frequency}Hz`);
+        } catch (error) {
+            console.error('[App] Audio beep failed:', error);
         }
     }
 
