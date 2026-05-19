@@ -1514,128 +1514,88 @@ class SprintTimerApp {
     }
     
     /**
-     * Generate PDF from result screen
+     * Generate PDF from result screen (screenshot style)
      */
     async generatePDF() {
         try {
-            // Check if jsPDF is loaded
-            if (typeof window.jspdf === 'undefined') {
-                throw new Error('jsPDF kütüphanesi yüklenemedi');
+            // Check if html2canvas is loaded
+            if (typeof html2canvas === 'undefined') {
+                throw new Error('html2canvas kütüphanesi yüklenemedi');
             }
             
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            this.ui.showToast('PDF oluşturuluyor...', 'info');
             
-            // Title
-            doc.setFontSize(20);
-            doc.text('Sprint Kronometre - Sonuç Raporu', 105, 20, { align: 'center' });
+            // Get the result screen element
+            const resultScreen = document.getElementById('result-screen');
             
-            // Race time
-            doc.setFontSize(16);
-            const totalTime = this.raceData.totalTime.toFixed(2);
-            doc.text(`Süre: ${totalTime} saniye`, 105, 35, { align: 'center' });
+            // Temporarily hide buttons we don't want in PDF
+            const saveBtn = document.getElementById('save-result-btn');
+            const pdfBtn = document.getElementById('download-pdf-btn');
+            const finishControls = document.getElementById('finish-controls');
+            const waitingMessage = document.getElementById('waiting-restart-message');
             
-            // Details
-            doc.setFontSize(12);
-            let yPos = 50;
+            const originalDisplay = {
+                save: saveBtn.style.display,
+                pdf: pdfBtn.style.display,
+                finish: finishControls.style.display,
+                waiting: waitingMessage.style.display
+            };
             
-            doc.text(`Mesafe: ${this.distances[this.distances.length - 1]}m`, 20, yPos);
-            yPos += 10;
+            saveBtn.style.display = 'none';
+            pdfBtn.style.display = 'none';
+            finishControls.style.display = 'none';
+            waitingMessage.style.display = 'none';
             
-            doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
-            yPos += 10;
-            
-            doc.text(`Saat: ${new Date().toLocaleTimeString('tr-TR')}`, 20, yPos);
-            yPos += 15;
-            
-            // Athlete info
-            const athleteName = document.getElementById('athlete-name').value;
-            const notes = document.getElementById('race-notes').value;
-            
-            if (athleteName) {
-                doc.text(`Sporcu: ${athleteName}`, 20, yPos);
-                yPos += 10;
-            }
-            
-            if (notes) {
-                doc.text(`Notlar: ${notes}`, 20, yPos);
-                yPos += 10;
-            }
-            
-            yPos += 5;
-            
-            // Split times
-            if (this.phoneCount > 2) {
-                doc.setFontSize(14);
-                doc.text('Split Zamanları:', 20, yPos);
-                yPos += 10;
-                
-                doc.setFontSize(11);
-                const splits = Object.values(this.splitTimes)
-                    .filter(s => s && s.elapsed !== undefined)
-                    .sort((a, b) => a.index - b.index);
-                
-                let previousTime = 0;
-                splits.forEach((split, idx) => {
-                    const segmentTime = idx === 0 ? split.elapsed : split.elapsed - previousTime;
-                    const distance = this.distances[split.index];
-                    const prevDistance = idx === 0 ? 0 : this.distances[splits[idx - 1].index];
-                    
-                    doc.text(`${prevDistance}m - ${distance}m: ${segmentTime.toFixed(2)}s`, 25, yPos);
-                    yPos += 8;
-                    previousTime = split.elapsed;
-                });
-                
-                yPos += 5;
-            }
-            
-            // Photos
-            doc.setFontSize(14);
-            doc.text('Fotoğraflar:', 20, yPos);
-            yPos += 10;
-            
-            const photos = [];
-            if (this.startPhoto) photos.push({ src: this.startPhoto, label: 'Başlangıç' });
-            
-            const splits = Object.values(this.splitTimes)
-                .filter(s => s && s.photo && !s.role.includes('start') && !s.role.includes('finish'))
-                .sort((a, b) => a.index - b.index);
-            
-            splits.forEach(split => {
-                if (split.photo) {
-                    photos.push({ src: split.photo, label: `${split.index}. Telefon` });
-                }
+            // Capture screenshot
+            const canvas = await html2canvas(resultScreen, {
+                scale: 2, // Higher quality
+                backgroundColor: '#ffffff',
+                logging: false,
+                useCORS: true,
+                allowTaint: true
             });
             
-            if (this.finishPhoto) photos.push({ src: this.finishPhoto, label: 'Bitiş' });
+            // Restore button visibility
+            saveBtn.style.display = originalDisplay.save;
+            pdfBtn.style.display = originalDisplay.pdf;
+            finishControls.style.display = originalDisplay.finish;
+            waitingMessage.style.display = originalDisplay.waiting;
             
-            // Add photos to PDF
-            for (let i = 0; i < photos.length; i++) {
-                const photo = photos[i];
-                
-                // Add new page if needed
-                if (i > 0 && yPos > 200) {
-                    doc.addPage();
-                    yPos = 20;
-                }
-                
-                doc.setFontSize(11);
-                doc.text(photo.label, 20, yPos);
-                yPos += 5;
-                
-                try {
-                    // Add image (scaled to fit)
-                    doc.addImage(photo.src, 'JPEG', 20, yPos, 80, 60);
-                    yPos += 70;
-                } catch (err) {
-                    console.error('[App] Error adding image to PDF:', err);
-                    doc.text('(Fotoğraf eklenemedi)', 20, yPos);
-                    yPos += 10;
-                }
+            // Convert canvas to image
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            
+            // Create PDF
+            const { jsPDF } = window.jspdf;
+            
+            // Calculate PDF dimensions (A4 portrait)
+            const pdfWidth = 210; // A4 width in mm
+            const pdfHeight = 297; // A4 height in mm
+            
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const ratio = imgWidth / imgHeight;
+            
+            // Fit image to PDF page
+            let finalWidth = pdfWidth - 20; // 10mm margin on each side
+            let finalHeight = finalWidth / ratio;
+            
+            // If height exceeds page, scale down
+            if (finalHeight > pdfHeight - 20) {
+                finalHeight = pdfHeight - 20;
+                finalWidth = finalHeight * ratio;
             }
             
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Center the image
+            const xOffset = (pdfWidth - finalWidth) / 2;
+            const yOffset = 10;
+            
+            doc.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+            
             // Save PDF
-            const filename = `sprint-${new Date().getTime()}.pdf`;
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            const filename = `sprint-sonuc-${timestamp}.pdf`;
             doc.save(filename);
             
             this.ui.showToast('PDF indirildi', 'success');
