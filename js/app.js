@@ -1165,6 +1165,8 @@ class SprintTimerApp {
      * Handle motion detection
      */
     onMotionDetected(detection) {
+        console.log(`[App] onMotionDetected called - State: ${this.state}, isStart: ${this.isStart}, isFinish: ${this.isFinish}`);
+        
         if (this.state === 'READY' && this.isStart) {
             // START PHONE: Check if all phones are ready before starting
             if (this.readyPhones.size < this.phoneCount - 1) {
@@ -1227,15 +1229,19 @@ class SprintTimerApp {
             
         } else if (this.state === 'RUNNING' && !this.isStart && !this.isFinish) {
             // INTERMEDIATE PHONE: Measure split time
+            console.log(`[App] ${this.getRoleDisplayName()}: Calling onSplitDetected`);
             this.onSplitDetected(detection);
             
         } else if (this.state === 'RUNNING' && this.isFinish) {
             // FINISH PHONE: Only STOP in RUNNING state
+            console.log(`[App] Finish Phone: Calling onFinishDetected`);
             this.onFinishDetected(detection);
             
         } else if (this.state === 'READY' && !this.isStart) {
             // OTHER PHONES: Ignore motion in READY state
             console.log(`[App] ${this.getRoleDisplayName()}: Motion detected but ignoring - waiting for START signal`);
+        } else {
+            console.log(`[App] ${this.getRoleDisplayName()}: Motion detected but no handler matched - State: ${this.state}, isStart: ${this.isStart}, isFinish: ${this.isFinish}`);
         }
     }
     
@@ -1300,18 +1306,25 @@ class SprintTimerApp {
     }
 
     /**
-     * Handle finish detection (Phone 2 only)
+     * Handle finish detection (Finish phone only)
      */
     onFinishDetected(detection) {
-        if (this.state !== 'RUNNING' || this.isPhone1) {
-            console.log('[App] onFinishDetected called but conditions not met');
+        console.log(`[App] onFinishDetected called - State: ${this.state}, isFinish: ${this.isFinish}, isPhone1: ${this.isPhone1}`);
+        
+        if (this.state !== 'RUNNING') {
+            console.log(`[App] Finish Phone: Cannot detect - state is ${this.state}, expected RUNNING`);
+            return;
+        }
+        
+        if (!this.isFinish) {
+            console.log(`[App] onFinishDetected called but this is not finish phone!`);
             return;
         }
         
         const finishTime = detection.timestamp;
         const elapsed = (finishTime - this.raceStartTime) / 1000; // Convert to seconds
         
-        console.log(`[App] Phone 2: STOP detected, elapsed time: ${elapsed.toFixed(2)}s`);
+        console.log(`[App] Finish Phone: STOP detected, elapsed time: ${elapsed.toFixed(2)}s`);
         
         this.state = 'FINISHED';
         this.detector.stopDetection();
@@ -1319,18 +1332,20 @@ class SprintTimerApp {
         // Store finish photo
         this.finishPhoto = detection.frame;
         
-        // Send STOP signal to Phone 1 (with photo)
+        // Send STOP signal to all phones (with photo)
         this.connection.send({
             type: 'STOP',
             timestamp: this.timer.timestamp(),
             payload: {
+                role: this.phoneRole,
+                index: this.phoneIndex,
                 elapsed: elapsed,
                 frame: detection.frame,
-                photo: detection.frame // Send photo to Phone 1
+                photo: detection.frame
             }
         });
         
-        console.log('[App] Phone 2: STOP signal sent to Phone 1 with photo');
+        console.log('[App] Finish Phone: STOP signal sent to all phones with photo');
         
         // Show result
         this.showResult(elapsed);
