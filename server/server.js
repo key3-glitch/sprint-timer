@@ -286,3 +286,23 @@ server.listen(PORT, () => {
     console.log(`[Server] Sprint Timer Signaling Server running on port ${PORT}`);
     console.log(`[Server] Health check: http://localhost:${PORT}/health`);
 });
+
+// Keep-alive: Ping server every 10 minutes to prevent cold start
+if (process.env.RENDER) {
+    const KEEP_ALIVE_URL = process.env.RENDER_EXTERNAL_URL || `https://sprint-timer.onrender.com`;
+    
+    setInterval(async () => {
+        try {
+            const https = require('https');
+            https.get(`${KEEP_ALIVE_URL}/health`, (res) => {
+                console.log(`[Keep-Alive] Ping successful: ${res.statusCode}`);
+            }).on('error', (err) => {
+                console.error(`[Keep-Alive] Ping failed:`, err.message);
+            });
+        } catch (error) {
+            console.error(`[Keep-Alive] Error:`, error.message);
+        }
+    }, 10 * 60 * 1000); // Every 10 minutes
+    
+    console.log(`[Server] Keep-alive enabled for Render deployment`);
+}

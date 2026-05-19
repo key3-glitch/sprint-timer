@@ -100,10 +100,12 @@ class ConnectionManager {
                 return;
             }
             
-            // Set timeout for join room (30 seconds)
+            // Set timeout for join room (60 seconds for cold start)
             const timeout = setTimeout(() => {
-                reject(new Error('Zaman aşımı - Sunucu yanıt vermiyor'));
-            }, 30000);
+                reject(new Error('Zaman aşımı (60s) - Sunucu uyanıyor, lütfen tekrar deneyin'));
+            }, 60000); // 60 seconds
+            
+            console.log(`[Connection] Joining room ${roomCode} as ${role}...`);
             
             this.ws.emit('join-room', { roomCode, role }, (response) => {
                 clearTimeout(timeout);
@@ -321,7 +323,7 @@ class ConnectionManager {
             console.log('[WebSocket] Connecting to:', this.signalingServer);
             this.ws = io(this.signalingServer, {
                 transports: ['websocket', 'polling'],
-                timeout: 20000,
+                timeout: 60000, // 60 seconds for cold start
                 reconnection: true,
                 reconnectionDelay: 1000,
                 reconnectionAttempts: 5
@@ -372,12 +374,12 @@ class ConnectionManager {
                 this.handleMessage({ type: 'peer-disconnected', payload: {} });
             });
             
-            // Timeout
+            // Timeout - 60 seconds for cold start
             setTimeout(() => {
                 if (!this.ws.connected) {
-                    reject(new Error('WebSocket connection timeout'));
+                    reject(new Error('WebSocket bağlantı zaman aşımı (60s) - Sunucu uyanıyor'));
                 }
-            }, 5000);
+            }, 60000);
         });
     }
 
