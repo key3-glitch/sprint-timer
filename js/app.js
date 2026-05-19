@@ -986,7 +986,7 @@ class SprintTimerApp {
             console.log('[App] Finish Phone: PREPARE signal sent to Start phone');
         }
         
-        // Start countdown (5 seconds) with audio beeps
+        // Start countdown (5 seconds) with VERY LOUD audio beeps
         for (let i = 5; i > 0; i--) {
             this.ui.updateCountdown(i);
             this.ui.updatePreparationStatus(
@@ -995,8 +995,8 @@ class SprintTimerApp {
                 '±5ms'
             );
             
-            // Play countdown beep (short beep, LOUDER)
-            this.playBeep(200, 800, 0.7); // 200ms, 800Hz, volume 0.7 (YÜKSEK)
+            // Play countdown beep (short beep, VERY LOUD - MAXIMUM)
+            this.playBeep(200, 800, 1.0); // 200ms, 800Hz, volume 1.0 (MAKSİMUM)
             
             await this.sleep(1000);
         }
@@ -1008,8 +1008,8 @@ class SprintTimerApp {
         if (syncResult) {
             this.ui.updatePreparationStatus('Hazır ✓', 'Tamamlandı ✓', syncResult.accuracy);
             
-            // Play long ready beep (1 second, MUCH LOUDER)
-            this.playBeep(1000, 600, 1.0); // 1000ms, 600Hz, volume 1.0 (MAKSİMUM)
+            // Play long ready beep (1.5 seconds, VERY LOUD - MAXIMUM)
+            this.playBeep(1500, 600, 1.0); // 1500ms (daha uzun), 600Hz, volume 1.0 (MAKSİMUM)
             
             await this.sleep(500);
             
@@ -1024,9 +1024,9 @@ class SprintTimerApp {
      * Play audio beep
      * @param {number} duration - Duration in milliseconds
      * @param {number} frequency - Frequency in Hz (default 800)
-     * @param {number} volume - Volume 0-1 (default 0.7)
+     * @param {number} volume - Volume 0-1 (default 1.0)
      */
-    playBeep(duration = 200, frequency = 800, volume = 0.7) {
+    playBeep(duration = 200, frequency = 800, volume = 1.0) {
         try {
             // Create audio context
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -1041,17 +1041,16 @@ class SprintTimerApp {
             
             // Configure oscillator
             oscillator.frequency.value = frequency;
-            oscillator.type = 'sine'; // Smooth sine wave
+            oscillator.type = 'square'; // Square wave for LOUDER sound
             
-            // Configure volume with fade out
+            // Configure volume - NO FADE OUT for maximum loudness
             gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
             
             // Play
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + duration / 1000);
             
-            console.log(`[App] Beep played: ${duration}ms, ${frequency}Hz, volume ${volume}`);
+            console.log(`[App] LOUD Beep played: ${duration}ms, ${frequency}Hz, volume ${volume}`);
         } catch (error) {
             console.error('[App] Audio beep failed:', error);
         }
