@@ -1090,12 +1090,10 @@ class SprintTimerApp {
             // ALL NON-START PHONES: Setup START message listener
             if (!this.isStart) {
                 console.log(`[App] ${this.getRoleDisplayName()}: Setting up START message listener`);
-                this.showDebugToast(`${this.phoneRole}: Waiting for START`);
                 
                 this.connection.on('message', (message) => {
                     if (message.type === 'START' && this.state === 'READY') {
-                        console.log(`[App] ${this.getRoleDisplayName()}: Received START signal from Start phone`);
-                        this.showDebugToast(`${this.phoneRole}: START received!`);
+                        console.log(`[App] ${this.getRoleDisplayName()}: Received START signal`);
                         
                         // CRITICAL: Use own timestamp when START message arrives
                         this.raceStartTime = performance.now();
@@ -1104,8 +1102,7 @@ class SprintTimerApp {
                         // Store start photo from Start phone
                         this.startPhoto = message.payload.photo;
                         
-                        console.log(`[App] ${this.getRoleDisplayName()}: Race start time set to ${this.raceStartTime.toFixed(2)}ms`);
-                        this.showDebugToast(`${this.phoneRole}: State=RUNNING, detecting ${this.isFinish ? 'FINISH' : 'SPLIT'}`);
+                        console.log(`[App] ${this.getRoleDisplayName()}: State=RUNNING, detecting ${this.isFinish ? 'FINISH' : 'SPLIT'}`);
                         
                         // Update UI
                         this.ui.showScreen('running');
@@ -1115,8 +1112,6 @@ class SprintTimerApp {
                         if (this.isFinish) {
                             this.startLiveTimer();
                         }
-                        
-                        console.log(`[App] ${this.getRoleDisplayName()}: Now detecting for ${this.isFinish ? 'STOP' : 'SPLIT'}`);
                     }
                 });
             }
@@ -1169,9 +1164,7 @@ class SprintTimerApp {
      * Handle motion detection
      */
     onMotionDetected(detection) {
-        const debugMsg = `Motion: State=${this.state}, Start=${this.isStart}, Finish=${this.isFinish}`;
-        console.log(`[App] ${debugMsg}`);
-        this.showDebugToast(debugMsg);
+        console.log(`[App] onMotionDetected - State: ${this.state}, isStart: ${this.isStart}, isFinish: ${this.isFinish}`);
         
         if (this.state === 'READY' && this.isStart) {
             // START PHONE: Check if all phones are ready before starting
@@ -1203,8 +1196,7 @@ class SprintTimerApp {
                 }
             });
             
-            console.log('[App] Start Phone: START signal sent with photo to all phones');
-            this.showDebugToast('START signal sent');
+            console.log('[App] Start Phone: START signal sent');
             
             // Update UI - Start phone waits
             this.ui.showScreen('running');
@@ -1231,77 +1223,23 @@ class SprintTimerApp {
                 };
                 
                 this.connection.on('message', this._raceMessageHandler);
-                console.log('[App] Start Phone: Race message handler setup (one-time)');
+                console.log('[App] Start Phone: Race message handler setup');
             }
             
         } else if (this.state === 'RUNNING' && !this.isStart && !this.isFinish) {
             // INTERMEDIATE PHONE: Measure split time
-            console.log(`[App] ${this.getRoleDisplayName()}: Calling onSplitDetected`);
-            this.showDebugToast('Split detected');
+            console.log(`[App] ${this.getRoleDisplayName()}: Split detected`);
             this.onSplitDetected(detection);
             
         } else if (this.state === 'RUNNING' && this.isFinish) {
-            // FINISH PHONE: Only STOP in RUNNING state
-            console.log(`[App] Finish Phone: Calling onFinishDetected`);
-            this.showDebugToast('Finish: Calling onFinishDetected');
+            // FINISH PHONE: Stop detection
+            console.log(`[App] Finish Phone: Finish detected`);
             this.onFinishDetected(detection);
             
         } else if (this.state === 'READY' && !this.isStart) {
-            // OTHER PHONES: Ignore motion in READY state
-            console.log(`[App] ${this.getRoleDisplayName()}: Motion detected but ignoring - waiting for START signal`);
-            this.showDebugToast('Waiting for START signal');
-        } else {
-            const msg = `No handler: State=${this.state}, Start=${this.isStart}, Finish=${this.isFinish}`;
-            console.log(`[App] ${msg}`);
-            this.showDebugToast(msg);
+            // OTHER PHONES: Ignore motion in READY state (waiting for START signal)
+            console.log(`[App] ${this.getRoleDisplayName()}: Waiting for START signal`);
         }
-    }
-    
-    /**
-     * Show debug toast (visible on screen)
-     */
-    showDebugToast(message) {
-        // Create debug toast container if not exists
-        let debugContainer = document.getElementById('debug-toast-container');
-        if (!debugContainer) {
-            debugContainer = document.createElement('div');
-            debugContainer.id = 'debug-toast-container';
-            debugContainer.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 10px;
-                right: 10px;
-                z-index: 9999;
-                pointer-events: none;
-                font-size: 11px;
-                max-height: 200px;
-                overflow-y: auto;
-            `;
-            document.body.appendChild(debugContainer);
-        }
-        
-        // Create debug message
-        const debugMsg = document.createElement('div');
-        debugMsg.style.cssText = `
-            background: rgba(0, 0, 0, 0.8);
-            color: #0f0;
-            padding: 4px 8px;
-            margin-bottom: 2px;
-            border-radius: 4px;
-            font-family: monospace;
-            word-break: break-all;
-        `;
-        debugMsg.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
-        
-        debugContainer.appendChild(debugMsg);
-        
-        // Keep only last 10 messages
-        while (debugContainer.children.length > 10) {
-            debugContainer.removeChild(debugContainer.firstChild);
-        }
-        
-        // Auto scroll to bottom
-        debugContainer.scrollTop = debugContainer.scrollHeight;
     }
     
     /**
