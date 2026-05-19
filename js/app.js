@@ -3,6 +3,42 @@
  * Coordinates all components
  */
 
+// Race Counter for Ad Management
+class RaceCounter {
+    constructor() {
+        this.count = parseInt(localStorage.getItem('raceCount') || '0');
+        this.isPremium = localStorage.getItem('isPremium') === 'true';
+        console.log(`[RaceCounter] Initialized: count=${this.count}, premium=${this.isPremium}`);
+    }
+    
+    increment() {
+        this.count++;
+        localStorage.setItem('raceCount', this.count);
+        console.log(`[RaceCounter] Race count: ${this.count}`);
+        return this.count;
+    }
+    
+    shouldShowAd() {
+        const show = !this.isPremium && this.count % 3 === 0 && this.count > 0;
+        console.log(`[RaceCounter] Should show ad: ${show} (count=${this.count}, premium=${this.isPremium})`);
+        return show;
+    }
+    
+    setPremium() {
+        this.isPremium = true;
+        localStorage.setItem('isPremium', 'true');
+        console.log('[RaceCounter] Premium activated!');
+    }
+    
+    getCount() {
+        return this.count;
+    }
+    
+    isPremiumUser() {
+        return this.isPremium;
+    }
+}
+
 class SprintTimerApp {
     constructor() {
         this.timer = new HighPrecisionTimer();
@@ -10,6 +46,7 @@ class SprintTimerApp {
         this.sync = new TimeSyncManager(this.timer, this.connection);
         this.detector = null; // Will be initialized when camera is needed
         this.ui = new UIController();
+        this.raceCounter = new RaceCounter(); // Race counter for ads
         
         this.state = 'INIT'; // INIT, CONNECTED, IDLE, PREPARING, READY, RUNNING, FINISHED
         this.phoneCount = 2; // Total number of phones (2-5)
@@ -42,6 +79,15 @@ class SprintTimerApp {
         
         // Initialize UI
         this.ui.initialize();
+        
+        // Setup install prompt for PWA
+        this.setupInstallPrompt();
+        
+        // Show premium badge if user is premium
+        if (this.raceCounter.isPremiumUser()) {
+            // Will be shown when idle screen is displayed
+            setTimeout(() => this.showPremiumBadge(), 100);
+        }
         
         // Show splash screen
         this.ui.showScreen('splash');
@@ -1421,6 +1467,13 @@ class SprintTimerApp {
             splitTimes: this.splitTimes
         };
         
+        // Increment race counter and check for ad
+        const raceCount = this.raceCounter.increment();
+        if (this.raceCounter.shouldShowAd()) {
+            console.log(`[App] Showing ad after race #${raceCount}`);
+            this.showAdPlaceholder();
+        }
+        
         // Setup handlers
         this.setupResultHandlers();
     }
@@ -2114,6 +2167,249 @@ class SprintTimerApp {
                 indicator.remove();
             }
         }
+    }
+
+    /**
+     * Show ad placeholder (will be replaced with real AdMob later)
+     */
+    showAdPlaceholder() {
+        // Create ad overlay
+        const adOverlay = document.createElement('div');
+        adOverlay.id = 'ad-overlay';
+        adOverlay.className = 'ad-overlay';
+        adOverlay.innerHTML = `
+            <div class="ad-content">
+                <div class="ad-header">
+                    <h3>📢 Reklam</h3>
+                    <p>Uygulamayı ücretsiz kullanmaya devam edin</p>
+                </div>
+                <div class="ad-placeholder">
+                    <div class="ad-icon">📺</div>
+                    <p>Reklam burada gösterilecek</p>
+                    <p class="ad-note">(Mobil uygulamada AdMob reklamı gösterilecek)</p>
+                </div>
+                <button id="close-ad-btn" class="btn btn-primary btn-large">
+                    Kapat (5)
+                </button>
+                <div class="ad-footer">
+                    <p>Reklamları kaldırmak ister misiniz?</p>
+                    <button id="go-premium-btn" class="btn btn-secondary">
+                        ⭐ Premium'a Geç - ₺199
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(adOverlay);
+        
+        // Countdown timer for close button
+        let countdown = 5;
+        const closeBtn = document.getElementById('close-ad-btn');
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            closeBtn.textContent = `Kapat (${countdown})`;
+            
+            if (countdown <= 0) {
+                clearInterval(countdownInterval);
+                closeBtn.textContent = 'Kapat';
+                closeBtn.disabled = false;
+                closeBtn.onclick = () => {
+                    adOverlay.remove();
+                };
+            }
+        }, 1000);
+        
+        // Disable button initially
+        closeBtn.disabled = true;
+        
+        // Premium button
+        const premiumBtn = document.getElementById('go-premium-btn');
+        premiumBtn.onclick = () => {
+            adOverlay.remove();
+            this.showPremiumPurchase();
+        };
+        
+        console.log('[App] Ad placeholder shown');
+    }
+
+    /**
+     * Show premium purchase dialog
+     */
+    showPremiumPurchase() {
+        // Create premium modal
+        const premiumModal = document.createElement('div');
+        premiumModal.id = 'premium-modal';
+        premiumModal.className = 'modal active';
+        premiumModal.innerHTML = `
+            <div class="modal-overlay"></div>
+            <div class="modal-content premium-modal-content">
+                <div class="modal-header">
+                    <h3>⭐ Premium'a Geçin</h3>
+                    <button id="premium-close-btn" class="btn btn-icon-only">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="premium-features">
+                        <div class="premium-icon">🚀</div>
+                        <h4>Ömür Boyu Reklamsız</h4>
+                        <ul class="feature-list">
+                            <li>✓ Hiç reklam görmeden kullanın</li>
+                            <li>✓ Sınırsız koşu kaydı</li>
+                            <li>✓ Tüm özellikler açık</li>
+                            <li>✓ Tek seferlik ödeme</li>
+                            <li>✓ Ömür boyu geçerli</li>
+                        </ul>
+                        <div class="premium-price">
+                            <span class="price-label">Sadece</span>
+                            <span class="price-value">₺199</span>
+                            <span class="price-note">Tek seferlik ödeme</span>
+                        </div>
+                    </div>
+                    <div class="premium-note">
+                        <p>💡 <strong>Not:</strong> Mobil uygulamada Google Play üzerinden güvenli ödeme yapılacaktır.</p>
+                        <p>🌐 Web versiyonunda şu an için demo moddasınız.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="premium-purchase-btn" class="btn btn-success btn-large">
+                        ⭐ Premium Satın Al - ₺199
+                    </button>
+                    <button id="premium-cancel-btn" class="btn btn-secondary">
+                        Belki Sonra
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(premiumModal);
+        
+        // Close button
+        document.getElementById('premium-close-btn').onclick = () => {
+            premiumModal.remove();
+        };
+        
+        // Cancel button
+        document.getElementById('premium-cancel-btn').onclick = () => {
+            premiumModal.remove();
+        };
+        
+        // Purchase button (demo mode - will be replaced with In-App Purchase)
+        document.getElementById('premium-purchase-btn').onclick = () => {
+            // In real app, this will trigger Google Play In-App Purchase
+            // For now, just activate premium locally
+            this.activatePremium();
+            premiumModal.remove();
+        };
+        
+        // Close on overlay click
+        premiumModal.querySelector('.modal-overlay').onclick = () => {
+            premiumModal.remove();
+        };
+    }
+
+    /**
+     * Activate premium (demo mode)
+     */
+    activatePremium() {
+        this.raceCounter.setPremium();
+        this.ui.showToast('🎉 Premium aktif! Artık reklamsız kullanabilirsiniz.', 'success');
+        
+        // Show premium badge in idle screen
+        this.showPremiumBadge();
+        
+        console.log('[App] Premium activated!');
+    }
+
+    /**
+     * Show premium badge in idle screen
+     */
+    showPremiumBadge() {
+        const idleScreen = document.getElementById('idle-screen');
+        const statusHeader = idleScreen.querySelector('.status-header');
+        
+        // Check if badge already exists
+        if (document.getElementById('premium-badge')) {
+            return;
+        }
+        
+        const premiumBadge = document.createElement('div');
+        premiumBadge.id = 'premium-badge';
+        premiumBadge.className = 'status-badge premium';
+        premiumBadge.innerHTML = `
+            <span class="badge-icon">⭐</span>
+            <span class="badge-text">Premium</span>
+        `;
+        
+        statusHeader.appendChild(premiumBadge);
+    }
+
+    /**
+     * Setup install prompt for PWA
+     */
+    setupInstallPrompt() {
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('[App] Install prompt available');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button in idle screen
+            this.showInstallButton(deferredPrompt);
+        });
+        
+        // Check if already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('[App] PWA installed successfully');
+            this.ui.showToast('✅ Uygulama ana ekrana eklendi!', 'success');
+            
+            // Hide install button
+            const installBtn = document.getElementById('install-app-btn');
+            if (installBtn) {
+                installBtn.remove();
+            }
+        });
+    }
+
+    /**
+     * Show install button for PWA
+     */
+    showInstallButton(deferredPrompt) {
+        const idleScreen = document.getElementById('idle-screen');
+        const actionButtons = idleScreen.querySelector('.action-buttons');
+        
+        // Check if button already exists
+        if (document.getElementById('install-app-btn')) {
+            return;
+        }
+        
+        const installBtn = document.createElement('button');
+        installBtn.id = 'install-app-btn';
+        installBtn.className = 'btn btn-primary';
+        installBtn.innerHTML = `
+            <span class="btn-icon">📱</span>
+            <span class="btn-text">Ana Ekrana Ekle</span>
+        `;
+        
+        installBtn.onclick = async () => {
+            if (!deferredPrompt) {
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            console.log('[App] Install prompt outcome:', outcome);
+            
+            if (outcome === 'accepted') {
+                this.ui.showToast('✅ Uygulama yükleniyor...', 'success');
+            }
+            
+            deferredPrompt = null;
+            installBtn.remove();
+        };
+        
+        // Add before settings button
+        actionButtons.insertBefore(installBtn, actionButtons.firstChild);
     }
 }
 

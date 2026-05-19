@@ -1671,3 +1671,247 @@ body {
         width: 100%;
     }
 }
+
+
+/* ===================================
+   AD OVERLAY & PREMIUM STYLES
+   =================================== */
+
+/* Ad Overlay */
+.ad-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    animation: fadeIn 0.3s ease;
+}
+
+.ad-content {
+    background: var(--bg-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+.ad-header h3 {
+    font-size: 24px;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.ad-header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.ad-placeholder {
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-lg) 0;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.ad-icon {
+    font-size: 64px;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.ad-placeholder p {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: var(--spacing-xs) 0;
+}
+
+.ad-note {
+    font-size: 12px !important;
+    font-style: italic;
+    opacity: 0.7;
+}
+
+#close-ad-btn {
+    margin: var(--spacing-lg) 0;
+}
+
+#close-ad-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ad-footer {
+    border-top: 1px solid var(--border-color);
+    padding-top: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
+.ad-footer p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Premium Modal */
+.premium-modal-content {
+    max-width: 450px;
+}
+
+.premium-modal-content .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.premium-features {
+    text-align: center;
+    padding: var(--spacing-lg) 0;
+}
+
+.premium-icon {
+    font-size: 72px;
+    margin-bottom: var(--spacing-md);
+    animation: pulse 2s infinite;
+}
+
+.premium-features h4 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--spacing-xl) 0;
+    text-align: left;
+}
+
+.feature-list li {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 16px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.feature-list li::before {
+    content: '';
+    flex-shrink: 0;
+}
+
+.premium-price {
+    background: linear-gradient(135deg, var(--success-color), #2d8e47);
+    color: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin: var(--spacing-lg) 0;
+}
+
+.price-label {
+    display: block;
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: var(--spacing-xs);
+}
+
+.price-value {
+    display: block;
+    font-size: 48px;
+    font-weight: 900;
+    margin-bottom: var(--spacing-xs);
+}
+
+.price-note {
+    display: block;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.premium-note {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.premium-note p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: var(--spacing-xs) 0;
+    text-align: left;
+}
+
+.premium-note strong {
+    color: var(--text-primary);
+}
+
+.premium-modal-content .modal-footer {
+    flex-direction: column;
+}
+
+.premium-modal-content .modal-footer .btn {
+    width: 100%;
+}
+
+/* Premium Badge */
+.status-badge.premium {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #000;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+/* Install Button */
+#install-app-btn {
+    background: var(--success-color);
+    color: white;
+}
+
+#install-app-btn:hover {
+    background: #2d8e47;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 480px) {
+    .ad-content {
+        padding: var(--spacing-lg);
+    }
+    
+    .ad-placeholder {
+        min-height: 150px;
+        padding: var(--spacing-lg);
+    }
+    
+    .ad-icon {
+        font-size: 48px;
+    }
+    
+    .premium-icon {
+        font-size: 56px;
+    }
+    
+    .price-value {
+        font-size: 40px;
+    }
+    
+    .feature-list li {
+        font-size: 14px;
+    }
+}
