@@ -3,7 +3,7 @@
  * Enables offline functionality and caching
  */
 
-const CACHE_NAME = 'sprint-timer-v60';
+const CACHE_NAME = 'sprint-timer-v61';
 const urlsToCache = [
     '/',
     '/index.html',

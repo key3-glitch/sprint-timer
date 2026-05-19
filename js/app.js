@@ -1031,13 +1031,16 @@ class SprintTimerApp {
         this.detector = new MotionDetector(video, canvas);
         
         try {
+            console.log('[App] Initializing camera...');
             await this.detector.initializeCamera();
+            console.log('[App] Camera initialized successfully');
             
             // START PHONE: Just log ready status (no background color change)
             if (this.isStart) {
                 console.log('[App] Start Phone: Checking ready status...');
                 console.log(`[App] Start Phone: Ready phones:`, Array.from(this.readyPhones));
                 console.log(`[App] Start Phone: ${this.readyPhones.size}/${this.phoneCount - 1} phones ready`);
+                console.log('[App] Start Phone: Camera is active and ready to detect');
             }
             
             // ALL NON-START PHONES: Setup START message listener
@@ -1098,7 +1101,18 @@ class SprintTimerApp {
             
         } catch (error) {
             console.error('[App] Camera initialization failed:', error);
-            this.ui.showError('Kamera erişimi başarısız');
+            console.error('[App] Error details:', error.message);
+            console.error('[App] Phone role:', this.phoneRole);
+            console.error('[App] Is Start:', this.isStart);
+            
+            // Show user-friendly error
+            if (error.name === 'NotAllowedError') {
+                this.ui.showError('Kamera izni reddedildi. Lütfen ayarlardan kamera iznini verin.');
+            } else if (error.name === 'NotFoundError') {
+                this.ui.showError('Kamera bulunamadı. Cihazınızda kamera var mı?');
+            } else {
+                this.ui.showError('Kamera erişimi başarısız: ' + error.message);
+            }
         }
     }
     
