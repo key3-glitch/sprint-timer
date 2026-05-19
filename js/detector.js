@@ -11,7 +11,7 @@ class MotionDetector {
         this.previousFrame = null;
         this.linePosition = 0.5; // Middle of frame (0-1)
         this.lineOrientation = 'vertical'; // 'vertical' or 'horizontal'
-        this.threshold = 25; // Motion detection threshold (less sensitive)
+        this.threshold = 30; // Motion detection threshold (less sensitive)
         this.roiWidth = 50; // Region of interest width for vertical line (pixels)
         this.roiHeight = 50; // Region of interest height for horizontal line (pixels)
         this.isActive = false;

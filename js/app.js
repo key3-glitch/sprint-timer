@@ -1468,7 +1468,7 @@ class SprintTimerApp {
             });
         }
         
-        // Display all photos
+        // Display all photos with click handlers
         photos.forEach(photo => {
             const photoItem = document.createElement('div');
             photoItem.className = 'photo-item';
@@ -1477,12 +1477,175 @@ class SprintTimerApp {
                 <p class="photo-caption">${photo.caption} (${photo.distance})</p>
                 ${photo.time ? `<p class="photo-time">${photo.time}</p>` : ''}
             `;
+            
+            // Add click handler to open modal
+            photoItem.onclick = () => {
+                this.showPhotoModal(photo.src, photo.caption);
+            };
+            
             photosContainer.appendChild(photoItem);
         });
         
         console.log(`[App] Displayed ${photos.length} photos`);
     }
 
+    /**
+     * Show photo modal
+     */
+    showPhotoModal(photoSrc, caption) {
+        const modal = document.getElementById('photo-modal');
+        const image = document.getElementById('photo-modal-image');
+        const title = document.getElementById('photo-modal-title');
+        const closeBtn = document.getElementById('photo-modal-close');
+        
+        image.src = photoSrc;
+        title.textContent = caption;
+        modal.classList.add('active');
+        
+        // Close handlers
+        closeBtn.onclick = () => {
+            modal.classList.remove('active');
+        };
+        
+        const overlay = modal.querySelector('.modal-overlay');
+        overlay.onclick = () => {
+            modal.classList.remove('active');
+        };
+    }
+    
+    /**
+     * Generate PDF from result screen
+     */
+    async generatePDF() {
+        try {
+            // Check if jsPDF is loaded
+            if (typeof window.jspdf === 'undefined') {
+                throw new Error('jsPDF kütüphanesi yüklenemedi');
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Title
+            doc.setFontSize(20);
+            doc.text('Sprint Kronometre - Sonuç Raporu', 105, 20, { align: 'center' });
+            
+            // Race time
+            doc.setFontSize(16);
+            const totalTime = this.raceData.totalTime.toFixed(2);
+            doc.text(`Süre: ${totalTime} saniye`, 105, 35, { align: 'center' });
+            
+            // Details
+            doc.setFontSize(12);
+            let yPos = 50;
+            
+            doc.text(`Mesafe: ${this.distances[this.distances.length - 1]}m`, 20, yPos);
+            yPos += 10;
+            
+            doc.text(`Tarih: ${new Date().toLocaleDateString('tr-TR')}`, 20, yPos);
+            yPos += 10;
+            
+            doc.text(`Saat: ${new Date().toLocaleTimeString('tr-TR')}`, 20, yPos);
+            yPos += 15;
+            
+            // Athlete info
+            const athleteName = document.getElementById('athlete-name').value;
+            const notes = document.getElementById('race-notes').value;
+            
+            if (athleteName) {
+                doc.text(`Sporcu: ${athleteName}`, 20, yPos);
+                yPos += 10;
+            }
+            
+            if (notes) {
+                doc.text(`Notlar: ${notes}`, 20, yPos);
+                yPos += 10;
+            }
+            
+            yPos += 5;
+            
+            // Split times
+            if (this.phoneCount > 2) {
+                doc.setFontSize(14);
+                doc.text('Split Zamanları:', 20, yPos);
+                yPos += 10;
+                
+                doc.setFontSize(11);
+                const splits = Object.values(this.splitTimes)
+                    .filter(s => s && s.elapsed !== undefined)
+                    .sort((a, b) => a.index - b.index);
+                
+                let previousTime = 0;
+                splits.forEach((split, idx) => {
+                    const segmentTime = idx === 0 ? split.elapsed : split.elapsed - previousTime;
+                    const distance = this.distances[split.index];
+                    const prevDistance = idx === 0 ? 0 : this.distances[splits[idx - 1].index];
+                    
+                    doc.text(`${prevDistance}m - ${distance}m: ${segmentTime.toFixed(2)}s`, 25, yPos);
+                    yPos += 8;
+                    previousTime = split.elapsed;
+                });
+                
+                yPos += 5;
+            }
+            
+            // Photos
+            doc.setFontSize(14);
+            doc.text('Fotoğraflar:', 20, yPos);
+            yPos += 10;
+            
+            const photos = [];
+            if (this.startPhoto) photos.push({ src: this.startPhoto, label: 'Başlangıç' });
+            
+            const splits = Object.values(this.splitTimes)
+                .filter(s => s && s.photo && !s.role.includes('start') && !s.role.includes('finish'))
+                .sort((a, b) => a.index - b.index);
+            
+            splits.forEach(split => {
+                if (split.photo) {
+                    photos.push({ src: split.photo, label: `${split.index}. Telefon` });
+                }
+            });
+            
+            if (this.finishPhoto) photos.push({ src: this.finishPhoto, label: 'Bitiş' });
+            
+            // Add photos to PDF
+            for (let i = 0; i < photos.length; i++) {
+                const photo = photos[i];
+                
+                // Add new page if needed
+                if (i > 0 && yPos > 200) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                
+                doc.setFontSize(11);
+                doc.text(photo.label, 20, yPos);
+                yPos += 5;
+                
+                try {
+                    // Add image (scaled to fit)
+                    doc.addImage(photo.src, 'JPEG', 20, yPos, 80, 60);
+                    yPos += 70;
+                } catch (err) {
+                    console.error('[App] Error adding image to PDF:', err);
+                    doc.text('(Fotoğraf eklenemedi)', 20, yPos);
+                    yPos += 10;
+                }
+            }
+            
+            // Save PDF
+            const filename = `sprint-${new Date().getTime()}.pdf`;
+            doc.save(filename);
+            
+            this.ui.showToast('PDF indirildi', 'success');
+            
+        } catch (error) {
+            console.error('[App] PDF generation failed:', error);
+            this.ui.showToast('PDF oluşturulamadı: ' + error.message, 'error');
+        }
+    }
+    
     /**
      * Setup result screen handlers
      */
@@ -1503,7 +1666,7 @@ class SprintTimerApp {
         
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
         downloadPdfBtn.onclick = () => {
-            this.downloadResultsAsPDF();
+            this.generatePDF();
         };
         
         // Show appropriate controls based on phone role

@@ -1070,15 +1070,15 @@ body {
 }
 
 
-/* Race Photos (Start & Finish) - Much smaller and scrollable */
+/* Race Photos (Start & Finish) - Vertical layout, smaller, scrollable */
 .race-photos {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-xs);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
     margin: var(--spacing-sm) 0;
-    max-height: 200px;
+    max-height: 300px;
     overflow-y: auto;
-    padding: var(--spacing-xs);
+    padding: var(--spacing-sm);
     background: var(--bg-secondary);
     border-radius: var(--radius-md);
 }
@@ -1089,11 +1089,21 @@ body {
     box-shadow: var(--shadow-sm);
     background: white;
     padding: 4px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.photo-item:hover {
+    transform: scale(1.02);
+}
+
+.photo-item:active {
+    transform: scale(0.98);
 }
 
 .photo-item img {
     width: 100%;
-    height: 80px;
+    height: 100px;
     object-fit: cover;
     display: block;
     border-radius: 4px;
@@ -1101,29 +1111,28 @@ body {
 
 .photo-caption {
     text-align: center;
-    font-size: 9px;
+    font-size: 10px;
     color: var(--text-secondary);
-    margin-top: 2px;
+    margin-top: 4px;
     font-weight: 600;
 }
 
 .photo-time {
     text-align: center;
-    font-size: 10px;
+    font-size: 11px;
     color: var(--primary-color);
     margin-top: 2px;
     font-weight: 700;
 }
 
-/* Mobile: Even smaller */
+/* Mobile: Same layout */
 @media (max-width: 480px) {
     .race-photos {
-        grid-template-columns: repeat(2, 1fr);
-        max-height: 180px;
+        max-height: 250px;
     }
     
     .photo-item img {
-        height: 70px;
+        height: 90px;
     }
 }
 
@@ -1440,6 +1449,45 @@ body {
     color: var(--success-color);
 }
 
+
+/* Photo Modal Styles */
+.photo-modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+}
+
+.photo-modal-content .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.photo-modal-body {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+}
+
+.photo-modal-body img {
+    width: 100%;
+    height: auto;
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+#photo-modal-close {
+    background: transparent;
+    color: var(--text-primary);
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+}
+
+#photo-modal-close:hover {
+    background: var(--bg-secondary);
+}
 
 /* Distance Configuration */
 .distance-config {
