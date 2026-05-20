@@ -24,6 +24,21 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Add CSP headers to allow PDF generation libraries
+app.use((req, res, next) => {
+    res.setHeader(
+        'Content-Security-Policy',
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.socket.io; " +
+        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; " +
+        "img-src 'self' data: blob:; " +
+        "connect-src 'self' https://sprint-timer.onrender.com wss://sprint-timer.onrender.com; " +
+        "font-src 'self' data:; " +
+        "worker-src 'self' blob:;"
+    );
+    next();
+});
+
 // Serve static files (frontend) - serve from parent directory
 app.use(express.static(path.join(__dirname, '..')));
 
