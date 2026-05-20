@@ -2139,9 +2139,29 @@ class SprintTimerApp {
      */
     async requestWakeLock() {
         try {
+            // Check if running in Capacitor (native app)
+            if (window.Capacitor !== undefined) {
+                // Use Capacitor Keep Awake plugin
+                const { KeepAwake } = window.Capacitor.Plugins;
+                if (KeepAwake) {
+                    await KeepAwake.keepAwake();
+                    console.log('[App] Keep Awake activated (Capacitor)');
+                    
+                    // Show indicator
+                    const indicator = document.createElement('div');
+                    indicator.className = 'wake-lock-indicator';
+                    indicator.textContent = '🔒 Ekran Aktif';
+                    indicator.id = 'wake-lock-indicator';
+                    document.body.appendChild(indicator);
+                    
+                    return;
+                }
+            }
+            
+            // Fallback to Web Wake Lock API
             if ('wakeLock' in navigator) {
                 this.wakeLock = await navigator.wakeLock.request('screen');
-                console.log('[App] Wake lock activated');
+                console.log('[App] Wake lock activated (Web)');
                 
                 // Show indicator
                 const indicator = document.createElement('div');
@@ -2166,6 +2186,22 @@ class SprintTimerApp {
      * Release wake lock
      */
     releaseWakeLock() {
+        // Check if running in Capacitor (native app)
+        if (window.Capacitor !== undefined) {
+            const { KeepAwake } = window.Capacitor.Plugins;
+            if (KeepAwake) {
+                KeepAwake.allowSleep();
+                console.log('[App] Keep Awake released (Capacitor)');
+                
+                const indicator = document.getElementById('wake-lock-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+                return;
+            }
+        }
+        
+        // Fallback to Web Wake Lock API
         if (this.wakeLock !== null) {
             this.wakeLock.release();
             this.wakeLock = null;
