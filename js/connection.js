@@ -21,6 +21,15 @@ class ConnectionManager {
      * Get signaling server URL (auto-detect for mobile)
      */
     getSignalingServerURL() {
+        // Check if running in Capacitor (native app)
+        const isCapacitor = window.Capacitor !== undefined;
+        
+        if (isCapacitor) {
+            // Native app: always use production server
+            console.log('[Connection] Running in Capacitor, using production server');
+            return 'https://sprint-timer.onrender.com';
+        }
+        
         // Check if custom server URL is provided
         const urlParams = new URLSearchParams(window.location.search);
         const customServer = urlParams.get('server');
