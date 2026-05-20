@@ -2244,7 +2244,7 @@ class SprintTimerApp {
             <div class="modal-overlay"></div>
             <div class="modal-content premium-modal-content">
                 <div class="modal-header">
-                    <h3>⭐ Premium'a Geçin</h3>
+                    <h3>⭐ Premium</h3>
                     <button id="premium-close-btn" class="btn btn-icon-only">✕</button>
                 </div>
                 <div class="modal-body">
@@ -2256,22 +2256,20 @@ class SprintTimerApp {
                             <li>✓ Sınırsız koşu kaydı</li>
                             <li>✓ Tüm özellikler açık</li>
                             <li>✓ Tek seferlik ödeme</li>
-                            <li>✓ Ömür boyu geçerli</li>
                         </ul>
                         <div class="premium-price">
                             <span class="price-label">Sadece</span>
                             <span class="price-value">₺199</span>
-                            <span class="price-note">Tek seferlik ödeme</span>
+                            <span class="price-note">Tek seferlik</span>
                         </div>
                     </div>
                     <div class="premium-note">
-                        <p>💡 <strong>Not:</strong> Mobil uygulamada Google Play üzerinden güvenli ödeme yapılacaktır.</p>
-                        <p>🌐 Web versiyonunda şu an için demo moddasınız.</p>
+                        <p>💡 Mobil uygulamada Google Play üzerinden güvenli ödeme yapılacaktır.</p>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button id="premium-purchase-btn" class="btn btn-success btn-large">
-                        ⭐ Premium Satın Al - ₺199
+                        ⭐ Satın Al - ₺199
                     </button>
                     <button id="premium-cancel-btn" class="btn btn-secondary">
                         Belki Sonra
