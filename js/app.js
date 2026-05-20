@@ -2158,28 +2158,78 @@ class SprintTimerApp {
                 }
             }
             
-            // Fallback to Web Wake Lock API
+            // Try Web Wake Lock API first
             if ('wakeLock' in navigator) {
-                this.wakeLock = await navigator.wakeLock.request('screen');
-                console.log('[App] Wake lock activated (Web)');
-                
-                // Show indicator
-                const indicator = document.createElement('div');
-                indicator.className = 'wake-lock-indicator';
-                indicator.textContent = '🔒 Ekran Aktif';
-                indicator.id = 'wake-lock-indicator';
-                document.body.appendChild(indicator);
-                
-                // Re-request on visibility change
-                document.addEventListener('visibilitychange', async () => {
-                    if (this.wakeLock !== null && document.visibilityState === 'visible') {
-                        this.wakeLock = await navigator.wakeLock.request('screen');
-                    }
-                });
+                try {
+                    this.wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('[App] Wake lock activated (Web API)');
+                    
+                    // Show indicator
+                    const indicator = document.createElement('div');
+                    indicator.className = 'wake-lock-indicator';
+                    indicator.textContent = '🔒 Ekran Aktif';
+                    indicator.id = 'wake-lock-indicator';
+                    document.body.appendChild(indicator);
+                    
+                    // Re-request on visibility change
+                    document.addEventListener('visibilitychange', async () => {
+                        if (this.wakeLock !== null && document.visibilityState === 'visible') {
+                            this.wakeLock = await navigator.wakeLock.request('screen');
+                        }
+                    });
+                    
+                    return;
+                } catch (e) {
+                    console.warn('[App] Wake Lock API failed, trying video trick:', e);
+                }
             }
+            
+            // Fallback: Video trick for Safari/iOS
+            console.log('[App] Using video trick for wake lock (Safari/iOS)');
+            this.createNoSleepVideo();
+            
+            // Show indicator
+            const indicator = document.createElement('div');
+            indicator.className = 'wake-lock-indicator';
+            indicator.textContent = '🔒 Ekran Aktif (Video)';
+            indicator.id = 'wake-lock-indicator';
+            document.body.appendChild(indicator);
+            
         } catch (err) {
             console.warn('[App] Wake lock not supported or failed:', err);
         }
+    }
+
+    /**
+     * Create invisible video for Safari wake lock
+     */
+    createNoSleepVideo() {
+        // Create video element
+        const video = document.createElement('video');
+        video.id = 'nosleep-video';
+        video.setAttribute('playsinline', '');
+        video.setAttribute('muted', '');
+        video.style.position = 'fixed';
+        video.style.left = '-9999px';
+        video.style.width = '1px';
+        video.style.height = '1px';
+        
+        // Create a tiny video data URL (1 frame, silent)
+        video.src = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAu1tZGF0AAACrQYF//+p3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE1NSByMjkwMSA3ZDBmZjIyIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxOCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTEgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAwZYiEAD//8m+P5OXfBeLGOf0Cz4N3AAADAABnQAAADAYBHjgX4gABAAEAAAABAA==';
+        
+        document.body.appendChild(video);
+        
+        // Play video in loop
+        video.addEventListener('loadedmetadata', () => {
+            video.play().catch(e => console.warn('[App] Video play failed:', e));
+        });
+        
+        // Keep playing
+        video.addEventListener('ended', () => {
+            video.play().catch(e => console.warn('[App] Video replay failed:', e));
+        });
+        
+        this.noSleepVideo = video;
     }
 
     /**
@@ -2201,15 +2251,22 @@ class SprintTimerApp {
             }
         }
         
-        // Fallback to Web Wake Lock API
+        // Release Web Wake Lock API
         if (this.wakeLock !== null) {
             this.wakeLock.release();
             this.wakeLock = null;
-            
-            const indicator = document.getElementById('wake-lock-indicator');
-            if (indicator) {
-                indicator.remove();
-            }
+        }
+        
+        // Remove video trick
+        if (this.noSleepVideo) {
+            this.noSleepVideo.pause();
+            this.noSleepVideo.remove();
+            this.noSleepVideo = null;
+        }
+        
+        const indicator = document.getElementById('wake-lock-indicator');
+        if (indicator) {
+            indicator.remove();
         }
     }
 
