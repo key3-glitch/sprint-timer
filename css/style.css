@@ -1927,3 +1927,324 @@ body {
         font-size: 14px;
     }
 }
+
+
+/* ===================================
+   ONBOARDING SCREENS
+   =================================== */
+
+.onboarding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-color);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.onboarding-container {
+    width: 100%;
+    max-width: 500px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.onboarding-slide {
+    flex: 1;
+    display: none;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    overflow-y: auto;
+    padding: var(--spacing-xl) var(--spacing-lg);
+}
+
+.onboarding-slide.active {
+    display: flex;
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.slide-content {
+    width: 100%;
+    text-align: center;
+}
+
+.slide-icon {
+    font-size: 80px;
+    margin-bottom: var(--spacing-lg);
+    animation: pulse 2s infinite;
+}
+
+.slide-content h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.slide-content > p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Slide 1: Demo */
+.slide-image {
+    margin: var(--spacing-xl) 0;
+}
+
+.demo-phones {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    font-size: 48px;
+}
+
+.demo-phone {
+    animation: bounce 2s infinite;
+}
+
+.demo-runner {
+    animation: run 2s infinite;
+}
+
+.demo-arrow {
+    font-size: 32px;
+    color: var(--primary-color);
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes run {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+.slide-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    text-align: left;
+    background: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
+
+/* Slide 2: Steps */
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.step-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    text-align: left;
+    background: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-text strong {
+    display: block;
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.step-text p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Slide 3: Features */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.feature-card {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    text-align: center;
+}
+
+.feature-icon {
+    font-size: 32px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.feature-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.feature-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Slide 4: Ready */
+.ready-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin: var(--spacing-xl) 0;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    background: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    color: var(--text-primary);
+}
+
+.check-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.premium-teaser {
+    background: linear-gradient(135deg, rgba(26, 115, 232, 0.1), rgba(21, 87, 176, 0.1));
+    border: 2px solid var(--primary-color);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.teaser-text {
+    font-size: 13px;
+    color: var(--text-primary);
+    margin: 0;
+    text-align: left;
+    line-height: 1.5;
+}
+
+/* Navigation */
+.onboarding-navigation {
+    padding: var(--spacing-lg);
+    background: var(--bg-color);
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.dots-container {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background: var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.dot.active {
+    width: 24px;
+    border-radius: 5px;
+    background: var(--primary-color);
+}
+
+.nav-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.nav-buttons .btn {
+    flex: 1;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 480px) {
+    .slide-icon {
+        font-size: 64px;
+    }
+    
+    .slide-content h2 {
+        font-size: 24px;
+    }
+    
+    .demo-phones {
+        font-size: 36px;
+        gap: var(--spacing-sm);
+    }
+    
+    .demo-arrow {
+        font-size: 24px;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .feature-card {
+        padding: var(--spacing-sm);
+    }
+    
+    .step-number {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    .step-text strong {
+        font-size: 14px;
+    }
+    
+    .step-text p {
+        font-size: 13px;
+    }
+}

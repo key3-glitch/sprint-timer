@@ -63,6 +63,9 @@ class SprintTimerApp {
         this.distances = []; // Distance for each phone in meters [0, 20, 30, 60, ...]
         this.readyPhones = new Set(); // Track which phones are ready
         
+        // Onboarding
+        this.hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding') === 'true';
+        
         // Legacy support
         this.isPhone1 = null;
         
@@ -95,8 +98,13 @@ class SprintTimerApp {
         // Wait 2 seconds
         await this.sleep(2000);
         
-        // Show phone selection screen
-        this.showPhoneSelection();
+        // Check if user has seen onboarding
+        if (!this.hasSeenOnboarding) {
+            this.showOnboarding();
+        } else {
+            // Show phone selection screen
+            this.showPhoneSelection();
+        }
     }
 
     /**
@@ -2408,6 +2416,261 @@ class SprintTimerApp {
         
         // Add before settings button
         actionButtons.insertBefore(installBtn, actionButtons.firstChild);
+    }
+
+    /**
+     * Show onboarding screens
+     */
+    showOnboarding() {
+        console.log('[App] Showing onboarding...');
+        
+        // Create onboarding overlay
+        const onboarding = document.createElement('div');
+        onboarding.id = 'onboarding-overlay';
+        onboarding.className = 'onboarding-overlay';
+        onboarding.innerHTML = `
+            <div class="onboarding-container">
+                <!-- Slide 1: Welcome -->
+                <div class="onboarding-slide active" data-slide="1">
+                    <div class="slide-content">
+                        <div class="slide-icon">⏱️</div>
+                        <h2>Sprint Timer'a Hoş Geldiniz!</h2>
+                        <p>Profesyonel koşu zamanı ölçüm sistemi</p>
+                        <div class="slide-image">
+                            <div class="demo-phones">
+                                <div class="demo-phone">📱</div>
+                                <div class="demo-arrow">→</div>
+                                <div class="demo-runner">🏃</div>
+                                <div class="demo-arrow">→</div>
+                                <div class="demo-phone">📱</div>
+                            </div>
+                        </div>
+                        <p class="slide-description">
+                            İki telefon ile otomatik hareket algılama teknolojisi kullanarak 
+                            milisaniye hassasiyetinde koşu zamanı ölçümü yapın.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Slide 2: How it works -->
+                <div class="onboarding-slide" data-slide="2">
+                    <div class="slide-content">
+                        <div class="slide-icon">🎯</div>
+                        <h2>Nasıl Çalışır?</h2>
+                        <div class="steps-list">
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-text">
+                                    <strong>Başlangıç Telefonu</strong>
+                                    <p>Bir telefonu başlangıç çizgisine yerleştirin</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-text">
+                                    <strong>Bitiş Telefonu</strong>
+                                    <p>Diğer telefonu bitiş çizgisine yerleştirin</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-text">
+                                    <strong>Eşleştirin</strong>
+                                    <p>Telefonları oda kodu ile eşleştirin</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-number">4</div>
+                                <div class="step-text">
+                                    <strong>Hazırla & Koş!</strong>
+                                    <p>Sporcu koşsun, otomatik ölçüm başlasın</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3: Features -->
+                <div class="onboarding-slide" data-slide="3">
+                    <div class="slide-content">
+                        <div class="slide-icon">✨</div>
+                        <h2>Özellikler</h2>
+                        <div class="features-grid">
+                            <div class="feature-card">
+                                <div class="feature-icon">⚡</div>
+                                <h4>Yüksek Hassasiyet</h4>
+                                <p>±0.37ms hassasiyetle ölçüm</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">📸</div>
+                                <h4>Fotoğraflı Kayıt</h4>
+                                <p>Başlangıç ve bitiş fotoğrafları</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">📊</div>
+                                <h4>Split Zamanları</h4>
+                                <p>Ara nokta ölçümleri (3-5 telefon)</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">📄</div>
+                                <h4>PDF Rapor</h4>
+                                <p>Sonuçları PDF olarak kaydedin</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">🔄</div>
+                                <h4>Otomatik Senkronizasyon</h4>
+                                <p>Telefonlar otomatik senkronize</p>
+                            </div>
+                            <div class="feature-card">
+                                <div class="feature-icon">🎤</div>
+                                <h4>Sesli Geri Sayım</h4>
+                                <p>5-4-3-2-1 sesli hazırlık</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 4: Get Started -->
+                <div class="onboarding-slide" data-slide="4">
+                    <div class="slide-content">
+                        <div class="slide-icon">🚀</div>
+                        <h2>Hazır mısınız?</h2>
+                        <p>Profesyonel koşu ölçümüne başlayın!</p>
+                        <div class="ready-checklist">
+                            <div class="checklist-item">
+                                <span class="check-icon">✓</span>
+                                <span>2 telefon hazır</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">✓</span>
+                                <span>İnternet bağlantısı var</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span class="check-icon">✓</span>
+                                <span>Kamera izni verilecek</span>
+                            </div>
+                        </div>
+                        <div class="premium-teaser">
+                            <p class="teaser-text">💡 <strong>İpucu:</strong> Her 3 koşuda bir reklam gösterilir. 
+                            Reklamsız kullanım için Premium'a geçebilirsiniz (₺199 tek seferlik).</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="onboarding-navigation">
+                    <div class="dots-container">
+                        <span class="dot active" data-dot="1"></span>
+                        <span class="dot" data-dot="2"></span>
+                        <span class="dot" data-dot="3"></span>
+                        <span class="dot" data-dot="4"></span>
+                    </div>
+                    <div class="nav-buttons">
+                        <button id="onboarding-skip" class="btn btn-secondary">Atla</button>
+                        <button id="onboarding-next" class="btn btn-primary">İleri</button>
+                        <button id="onboarding-start" class="btn btn-success" style="display: none;">Başlayalım!</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(onboarding);
+        
+        // Setup navigation
+        let currentSlide = 1;
+        const totalSlides = 4;
+        
+        const updateSlide = (slideNum) => {
+            // Update slides
+            document.querySelectorAll('.onboarding-slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            document.querySelector(`.onboarding-slide[data-slide="${slideNum}"]`).classList.add('active');
+            
+            // Update dots
+            document.querySelectorAll('.dot').forEach(dot => {
+                dot.classList.remove('active');
+            });
+            document.querySelector(`.dot[data-dot="${slideNum}"]`).classList.add('active');
+            
+            // Update buttons
+            const nextBtn = document.getElementById('onboarding-next');
+            const startBtn = document.getElementById('onboarding-start');
+            
+            if (slideNum === totalSlides) {
+                nextBtn.style.display = 'none';
+                startBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                startBtn.style.display = 'none';
+            }
+        };
+        
+        // Next button
+        document.getElementById('onboarding-next').onclick = () => {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlide(currentSlide);
+            }
+        };
+        
+        // Skip button
+        document.getElementById('onboarding-skip').onclick = () => {
+            this.completeOnboarding();
+            onboarding.remove();
+            this.showPhoneSelection();
+        };
+        
+        // Start button
+        document.getElementById('onboarding-start').onclick = () => {
+            this.completeOnboarding();
+            onboarding.remove();
+            this.showPhoneSelection();
+        };
+        
+        // Dot navigation
+        document.querySelectorAll('.dot').forEach(dot => {
+            dot.onclick = () => {
+                const slideNum = parseInt(dot.dataset.dot);
+                currentSlide = slideNum;
+                updateSlide(currentSlide);
+            };
+        });
+        
+        // Swipe support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        onboarding.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        onboarding.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+        
+        const handleSwipe = () => {
+            if (touchEndX < touchStartX - 50 && currentSlide < totalSlides) {
+                // Swipe left - next slide
+                currentSlide++;
+                updateSlide(currentSlide);
+            }
+            if (touchEndX > touchStartX + 50 && currentSlide > 1) {
+                // Swipe right - previous slide
+                currentSlide--;
+                updateSlide(currentSlide);
+            }
+        };
+    }
+
+    /**
+     * Complete onboarding
+     */
+    completeOnboarding() {
+        localStorage.setItem('hasSeenOnboarding', 'true');
+        this.hasSeenOnboarding = true;
+        console.log('[App] Onboarding completed');
     }
 }
 
