@@ -1175,8 +1175,10 @@ class SprintTimerApp {
                 console.log(`[App] ${this.getRoleDisplayName()}: Setting up START message listener`);
                 
                 this.connection.on('message', (message) => {
+                    console.log(`[App] ${this.getRoleDisplayName()}: Received message:`, message.type, message);
+                    
                     if (message.type === 'START' && this.state === 'READY') {
-                        console.log(`[App] ${this.getRoleDisplayName()}: Received START signal`);
+                        console.log(`[App] ${this.getRoleDisplayName()}: ✅ Processing START signal`);
                         
                         // CRITICAL: Use own timestamp when START message arrives
                         this.raceStartTime = performance.now();
@@ -1195,6 +1197,8 @@ class SprintTimerApp {
                         if (this.isFinish) {
                             this.startLiveTimer();
                         }
+                    } else if (message.type === 'START') {
+                        console.warn(`[App] ${this.getRoleDisplayName()}: ⚠️ Received START but state is ${this.state}, not READY`);
                     }
                 });
             }

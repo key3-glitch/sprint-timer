@@ -11,14 +11,14 @@ class MotionDetector {
         this.previousFrame = null;
         this.linePosition = 0.5; // Middle of frame (0-1)
         this.lineOrientation = 'vertical'; // 'vertical' or 'horizontal'
-        this.threshold = 30; // Motion detection threshold (less sensitive)
-        this.roiWidth = 50; // Region of interest width for vertical line (pixels)
-        this.roiHeight = 50; // Region of interest height for horizontal line (pixels)
+        this.threshold = 15; // Motion detection threshold (more sensitive for mobile)
+        this.roiWidth = 80; // Region of interest width for vertical line (pixels) - wider for better detection
+        this.roiHeight = 80; // Region of interest height for horizontal line (pixels) - wider for better detection
         this.isActive = false;
         this.detectionCallback = null;
         this.frameCount = 0;
         this.lastDetectionTime = 0;
-        this.debounceTime = 500; // ms
+        this.debounceTime = 200; // ms - reduced for faster detection
         this.capturedPhoto = null; // Store captured photo
     }
 
@@ -164,9 +164,9 @@ class MotionDetector {
         
         const avgDiff = diffSum / pixelCount;
         
-        // Debug: log every 30 frames
-        if (this.frameCount % 30 === 0) {
-            console.log(`[Detector] Frame ${this.frameCount}, avgDiff: ${avgDiff.toFixed(2)}`);
+        // Debug: log every 15 frames (more frequent for debugging)
+        if (this.frameCount % 15 === 0) {
+            console.log(`[Detector] Frame ${this.frameCount}, avgDiff: ${avgDiff.toFixed(2)}, threshold: ${this.threshold}`);
         }
         
         return avgDiff > this.threshold;

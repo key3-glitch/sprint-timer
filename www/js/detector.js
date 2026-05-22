@@ -11,14 +11,14 @@ class MotionDetector {
         this.previousFrame = null;
         this.linePosition = 0.5; // Middle of frame (0-1)
         this.lineOrientation = 'vertical'; // 'vertical' or 'horizontal'
-        this.threshold = 30; // Motion detection threshold (less sensitive)
-        this.roiWidth = 50; // Region of interest width for vertical line (pixels)
-        this.roiHeight = 50; // Region of interest height for horizontal line (pixels)
+        this.threshold = 15; // Motion detection threshold (more sensitive for mobile)
+        this.roiWidth = 80; // Region of interest width for vertical line (pixels) - wider for better detection
+        this.roiHeight = 80; // Region of interest height for horizontal line (pixels) - wider for better detection
         this.isActive = false;
         this.detectionCallback = null;
         this.frameCount = 0;
         this.lastDetectionTime = 0;
-        this.debounceTime = 500; // ms
+        this.debounceTime = 200; // ms - reduced for faster detection
         this.capturedPhoto = null; // Store captured photo
     }
 
@@ -27,6 +27,12 @@ class MotionDetector {
      */
     async initializeCamera() {
         try {
+            // Request Wake Lock to prevent screen from turning off
+            if (typeof wakeLockManager !== 'undefined') {
+                await wakeLockManager.request();
+                console.log('[Detector] Wake Lock requested');
+            }
+            
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'environment', // Back camera
@@ -158,9 +164,9 @@ class MotionDetector {
         
         const avgDiff = diffSum / pixelCount;
         
-        // Debug: log every 30 frames
-        if (this.frameCount % 30 === 0) {
-            console.log(`[Detector] Frame ${this.frameCount}, avgDiff: ${avgDiff.toFixed(2)}`);
+        // Debug: log every 15 frames (more frequent for debugging)
+        if (this.frameCount % 15 === 0) {
+            console.log(`[Detector] Frame ${this.frameCount}, avgDiff: ${avgDiff.toFixed(2)}, threshold: ${this.threshold}`);
         }
         
         return avgDiff > this.threshold;
@@ -273,9 +279,30 @@ class MotionDetector {
      * Stop camera
      */
     stopCamera() {
+        console.log('[Detector] Stopping camera...');
+        
         if (this.video.srcObject) {
-            this.video.srcObject.getTracks().forEach(track => track.stop());
+            // Stop all tracks
+            const tracks = this.video.srcObject.getTracks();
+            tracks.forEach(track => {
+                track.stop();
+                console.log('[Detector] Track stopped:', track.kind);
+            });
+            
+            // Clear video source
             this.video.srcObject = null;
+            console.log('[Detector] Video source cleared');
+        }
+        
+        // Release Wake Lock when camera stops
+        if (typeof wakeLockManager !== 'undefined') {
+            wakeLockManager.release();
+            console.log('[Detector] Wake Lock released');
+        }
+        
+        // Clear canvas
+        if (this.canvas && this.ctx) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
     }
 
