@@ -7,7 +7,11 @@ class MotionDetector {
     constructor(videoElement, canvasElement) {
         this.video = videoElement;
         this.canvas = canvasElement;
-        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        this.ctx = this.canvas.getContext('2d', { 
+            willReadFrequently: true,
+            alpha: false,
+            desynchronized: true // Better performance on mobile
+        });
         this.previousFrame = null;
         this.linePosition = 0.5; // Middle of frame (0-1)
         this.lineOrientation = 'vertical'; // 'vertical' or 'horizontal'
@@ -20,6 +24,7 @@ class MotionDetector {
         this.lastDetectionTime = 0;
         this.debounceTime = 200; // ms - reduced for faster detection
         this.capturedPhoto = null; // Store captured photo
+        this.lastFrameTime = 0; // Track frame timing
     }
 
     /**
@@ -95,6 +100,7 @@ class MotionDetector {
         if (!this.isActive) return;
         
         this.frameCount++;
+        const now = performance.now();
         
         // Check if video is actually playing
         if (this.video.paused || this.video.readyState < 2) {
@@ -103,9 +109,27 @@ class MotionDetector {
             return;
         }
         
+        // Force canvas clear and redraw
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
         // Draw current frame to canvas
         this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
         const currentFrame = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Debug: Check if frame data is changing
+        if (this.frameCount === 30) {
+            const samplePixel = currentFrame.data[0] + currentFrame.data[1] + currentFrame.data[2];
+            console.log(`[Detector] Sample pixel value at frame 30: ${samplePixel}`);
+        }
+        
+        // Track frame timing
+        if (this.lastFrameTime > 0) {
+            const frameTime = now - this.lastFrameTime;
+            if (this.frameCount % 60 === 0) {
+                console.log(`[Detector] Frame time: ${frameTime.toFixed(2)}ms (${(1000/frameTime).toFixed(1)} fps)`);
+            }
+        }
+        this.lastFrameTime = now;
         
         // Skip first frame (need previous frame for comparison)
         if (this.previousFrame) {
