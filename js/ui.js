@@ -220,10 +220,32 @@ class UIController {
     /**
      * Show error
      */
-    showError(message) {
+    showError(message, showCameraReleaseButton = false) {
         if (this.elements.errorMessage) {
             this.elements.errorMessage.textContent = message;
         }
+        
+        // Show/hide camera release button
+        const releaseCameraBtn = document.getElementById('release-camera-btn');
+        if (releaseCameraBtn) {
+            releaseCameraBtn.style.display = showCameraReleaseButton ? 'block' : 'none';
+            
+            if (showCameraReleaseButton) {
+                releaseCameraBtn.onclick = async () => {
+                    releaseCameraBtn.disabled = true;
+                    releaseCameraBtn.textContent = '⏳ Serbest bırakılıyor...';
+                    
+                    if (typeof cameraUtils !== 'undefined') {
+                        await cameraUtils.releaseAllCameraStreams();
+                        this.showToast('Kamera serbest bırakıldı. Tekrar deneyin.', 'success');
+                    }
+                    
+                    releaseCameraBtn.disabled = false;
+                    releaseCameraBtn.textContent = '📹 Kamerayı Serbest Bırak';
+                };
+            }
+        }
+        
         this.showScreen('error');
     }
 
@@ -257,6 +279,82 @@ class UIController {
      */
     getElement(name) {
         return this.elements[name];
+    }
+
+    /**
+     * Update Wake Lock status indicator
+     */
+    updateWakeLockStatus(isActive) {
+        const indicator = document.getElementById('wake-lock-indicator');
+        if (!indicator) return;
+        
+        indicator.classList.remove('hidden', 'active', 'inactive');
+        
+        if (isActive) {
+            indicator.classList.add('active');
+            indicator.querySelector('.wake-lock-text').textContent = 'Ekran Açık';
+        } else {
+            indicator.classList.add('inactive');
+            indicator.querySelector('.wake-lock-text').textContent = 'Ekran Kilidi Yok';
+        }
+    }
+    
+    /**
+     * Show Wake Lock indicator
+     */
+    showWakeLockIndicator() {
+        const indicator = document.getElementById('wake-lock-indicator');
+        if (indicator) {
+            indicator.classList.remove('hidden');
+        }
+    }
+    
+    /**
+     * Hide Wake Lock indicator
+     */
+    hideWakeLockIndicator() {
+        const indicator = document.getElementById('wake-lock-indicator');
+        if (indicator) {
+            indicator.classList.add('hidden');
+        }
+    }
+    
+    /**
+     * Update WebRTC status indicator
+     */
+    updateWebRTCStatus(isConnected, message = '') {
+        const indicator = document.getElementById('webrtc-status');
+        if (!indicator) return;
+        
+        indicator.classList.remove('hidden', 'connected', 'disconnected');
+        
+        if (isConnected) {
+            indicator.classList.add('connected');
+            indicator.querySelector('.webrtc-text').textContent = message || 'STUN: Bağlı';
+        } else {
+            indicator.classList.add('disconnected');
+            indicator.querySelector('.webrtc-text').textContent = message || 'STUN: Bağlantı Yok';
+        }
+    }
+    
+    /**
+     * Show WebRTC indicator
+     */
+    showWebRTCIndicator() {
+        const indicator = document.getElementById('webrtc-status');
+        if (indicator) {
+            indicator.classList.remove('hidden');
+        }
+    }
+    
+    /**
+     * Hide WebRTC indicator
+     */
+    hideWebRTCIndicator() {
+        const indicator = document.getElementById('webrtc-status');
+        if (indicator) {
+            indicator.classList.add('hidden');
+        }
     }
 }
 

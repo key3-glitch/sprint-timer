@@ -2248,3 +2248,120 @@ body {
         font-size: 13px;
     }
 }
+
+
+/* === WAKE LOCK STATUS INDICATOR === */
+.wake-lock-indicator {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.wake-lock-indicator.active {
+    background: rgba(52, 168, 83, 0.9);
+}
+
+.wake-lock-indicator.inactive {
+    background: rgba(95, 99, 104, 0.9);
+}
+
+.wake-lock-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.wake-lock-text {
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.wake-lock-indicator.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* WebRTC Status Indicator */
+.webrtc-status {
+    position: fixed;
+    top: 60px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.webrtc-status.connected {
+    background: rgba(52, 168, 83, 0.9);
+}
+
+.webrtc-status.disconnected {
+    background: rgba(234, 67, 53, 0.9);
+}
+
+.webrtc-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.webrtc-text {
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .wake-lock-indicator,
+    .webrtc-status {
+        top: 12px;
+        right: 12px;
+        padding: 6px 12px;
+        font-size: 11px;
+    }
+    
+    .webrtc-status {
+        top: 50px;
+    }
+}
+
+
+/* Warning Button */
+.btn-warning {
+    background: linear-gradient(135deg, #fbbc04 0%, #f9ab00 100%);
+    color: white;
+    margin: 8px 0;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #f9ab00 0%, #ea8600 100%);
+    transform: translateY(-2px);
+}
+
+.btn-warning:active {
+    transform: translateY(0);
+}
+
+.btn-warning:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

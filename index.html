@@ -20,6 +20,18 @@
     <!-- App Container -->
     <div id="app" class="app-container">
         
+        <!-- Wake Lock Status Indicator -->
+        <div id="wake-lock-indicator" class="wake-lock-indicator hidden">
+            <span class="wake-lock-icon">🔒</span>
+            <span class="wake-lock-text">Ekran Kilidi</span>
+        </div>
+        
+        <!-- WebRTC Status Indicator -->
+        <div id="webrtc-status" class="webrtc-status hidden">
+            <span class="webrtc-icon">📡</span>
+            <span class="webrtc-text">STUN: Bağlı</span>
+        </div>
+        
         <!-- 1. SPLASH SCREEN -->
         <div id="splash-screen" class="screen active">
             <div class="splash-content">
@@ -305,8 +317,16 @@
                 </div>
 
                 <!-- Race Photos (All phones - dynamically populated) -->
-                <div class="race-photos">
+                <div class="race-photos" id="race-photos-container">
                     <!-- Photos will be added dynamically by displayAllPhotos() -->
+                </div>
+                
+                <!-- PDF Button for Photos -->
+                <div class="photo-pdf-actions" style="text-align: center; margin: 20px 0;">
+                    <button id="photo-pdf-btn" class="btn btn-success" style="display: none;">
+                        <span class="btn-icon">📸</span>
+                        <span class="btn-text">Fotoğrafları PDF Yap</span>
+                    </button>
                 </div>
 
                 <div class="result-details">
@@ -336,7 +356,14 @@
                     </button>
                     <button id="download-pdf-btn" class="btn btn-secondary">
                         <span class="btn-icon">📄</span>
-                        <span class="btn-text">PDF İndir</span>
+                        <span class="btn-text">Bu Koşu PDF</span>
+                    </button>
+                </div>
+                
+                <div class="session-actions">
+                    <button id="session-pdf-btn" class="btn btn-success">
+                        <span class="btn-icon">📊</span>
+                        <span class="btn-text">Oturum PDF (Tüm Koşular)</span>
                     </button>
                 </div>
 
@@ -369,6 +396,9 @@
                 <h2>Hata Oluştu</h2>
                 <p class="error-message" id="error-message">Bir şeyler yanlış gitti.</p>
                 <button id="retry-btn" class="btn btn-primary">Tekrar Dene</button>
+                <button id="release-camera-btn" class="btn btn-warning" style="display: none;">
+                    📹 Kamerayı Serbest Bırak
+                </button>
                 <button id="back-btn" class="btn btn-secondary">Geri Dön</button>
             </div>
         </div>
@@ -457,6 +487,15 @@
     <!-- Socket.IO Client -->
     <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
     
+    <!-- Wake Lock Manager -->
+    <script src="js/wakeLock.js"></script>
+    
+    <!-- WebRTC Configuration -->
+    <script src="js/webrtcConfig.js"></script>
+    
+    <!-- Camera Utilities -->
+    <script src="js/cameraUtils.js"></script>
+    
     <!-- Scripts -->
     <script src="js/timer.js"></script>
     <script src="js/sync.js"></script>
@@ -467,11 +506,16 @@
 
     <!-- Service Worker Registration -->
     <script>
+        // Service Worker'ı tamamen kaldır - CSP sorunlarına neden oluyor
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(reg => console.log('Service Worker registered', reg))
-                .catch(err => console.log('Service Worker registration failed', err));
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                    console.log('[App] Service Worker unregistered');
+                }
+            });
         }
+        console.log('[App] Service Worker disabled');
     </script>
 </body>
 </html>

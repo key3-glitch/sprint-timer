@@ -32,7 +32,7 @@ app.use((req, res, next) => {
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.socket.io; " +
         "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; " +
         "img-src 'self' data: blob:; " +
-        "connect-src 'self' https://sprint-timer.onrender.com wss://sprint-timer.onrender.com; " +
+        "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.socket.io https://sprint-timer.onrender.com wss://sprint-timer.onrender.com ws://localhost:* http://localhost:*; " +
         "font-src 'self' data:; " +
         "worker-src 'self' blob:;"
     );

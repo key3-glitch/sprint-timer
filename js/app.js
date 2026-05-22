@@ -1150,6 +1150,18 @@ class SprintTimerApp {
             await this.detector.initializeCamera();
             console.log('[App] Camera initialized successfully');
             
+            // Update Wake Lock indicator
+            if (typeof wakeLockManager !== 'undefined') {
+                const status = wakeLockManager.getStatus();
+                this.ui.updateWakeLockStatus(status.active);
+                this.ui.showWakeLockIndicator();
+                console.log('[App] Wake Lock status:', status);
+            }
+            
+            // Show WebRTC status (if using STUN)
+            this.ui.updateWebRTCStatus(true, 'STUN: Aktif');
+            this.ui.showWebRTCIndicator();
+            
             // START PHONE: Just log ready status (no background color change)
             if (this.isStart) {
                 console.log('[App] Start Phone: Checking ready status...');
@@ -1197,6 +1209,11 @@ class SprintTimerApp {
             cancelBtn.onclick = () => {
                 this.detector.stopDetection();
                 this.detector.stopCamera();
+                
+                // Hide indicators
+                this.ui.hideWakeLockIndicator();
+                this.ui.hideWebRTCIndicator();
+                
                 this.state = 'IDLE';
                 this.readyPhones.clear();
                 this.goToIdleScreen();
@@ -1219,18 +1236,28 @@ class SprintTimerApp {
             console.error('[App] Phone role:', this.phoneRole);
             console.error('[App] Is Start:', this.isStart);
             
+            // Clean up detector if exists
+            if (this.detector) {
+                this.detector.stopCamera();
+                this.detector = null;
+            }
+            
+            // Hide indicators
+            this.ui.hideWakeLockIndicator();
+            this.ui.hideWebRTCIndicator();
+            
             // Show user-friendly error
             if (error.name === 'NotAllowedError') {
                 this.ui.showError('Kamera izni reddedildi. Lütfen ayarlardan kamera iznini verin.');
             } else if (error.name === 'NotFoundError') {
                 this.ui.showError('Kamera bulunamadı. Cihazınızda kamera var mı?');
+            } else if (error.name === 'NotReadableError') {
+                this.ui.showError('Kamera kullanımda. Lütfen diğer uygulamaları kapatın ve tekrar deneyin.', true);
             } else {
                 this.ui.showError('Kamera erişimi başarısız: ' + error.message);
             }
         }
     }
-    
-    /**
     /**
      * Handle motion detection
      */
@@ -1551,7 +1578,12 @@ class SprintTimerApp {
      * Display all photos (start, intermediate, finish)
      */
     displayAllPhotos() {
-        const photosContainer = document.querySelector('.race-photos');
+        const photosContainer = document.getElementById('race-photos-container');
+        
+        if (!photosContainer) {
+            console.error('[App] race-photos-container not found!');
+            return;
+        }
         
         // AGGRESSIVE CLEANUP - Remove all children
         while (photosContainer.firstChild) {
@@ -1621,6 +1653,22 @@ class SprintTimerApp {
         });
         
         console.log(`[App] Displayed ${photos.length} photos`);
+        
+        // Show PDF button if there are photos
+        const photoPdfBtn = document.getElementById('photo-pdf-btn');
+        console.log('[App] Photo PDF button element:', photoPdfBtn);
+        console.log('[App] Photos count:', photos.length);
+        
+        if (photoPdfBtn) {
+            if (photos.length > 0) {
+                photoPdfBtn.style.display = 'inline-block';
+                console.log('[App] Photo PDF button SHOWN');
+            } else {
+                console.log('[App] No photos, button hidden');
+            }
+        } else {
+            console.error('[App] Photo PDF button NOT FOUND in DOM!');
+        }
     }
 
     /**
@@ -1648,120 +1696,476 @@ class SprintTimerApp {
     }
     
     /**
+     * Generate simple PDF from photos only
+     */
+    async generatePhotosPDF() {
+        try {
+            console.log('[PDF] Starting photos PDF generation...');
+            
+            this.ui.showToast('PDF oluşturuluyor...', 'info');
+            
+            // Get photos container
+            const photosContainer = document.getElementById('race-photos-container');
+            if (!photosContainer || photosContainer.children.length === 0) {
+                throw new Error('Fotoğraf bulunamadı');
+            }
+            
+            console.log('[PDF] Found', photosContainer.children.length, 'photos');
+            
+            // Create PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            const pageWidth = 210;
+            const pageHeight = 297;
+            const margin = 10;
+            const contentWidth = pageWidth - (2 * margin);
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('Sprint Koşu Fotoğrafları', pageWidth / 2, 20, { align: 'center' });
+            
+            // Add date
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('tr-TR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            doc.text(dateStr, pageWidth / 2, 28, { align: 'center' });
+            
+            let yPos = 40;
+            
+            // Get all photo images
+            const photoElements = photosContainer.querySelectorAll('.photo-item img');
+            console.log('[PDF] Processing', photoElements.length, 'photo elements');
+            
+            for (let i = 0; i < photoElements.length; i++) {
+                const img = photoElements[i];
+                const caption = img.alt || `Fotoğraf ${i + 1}`;
+                
+                // Check if we need a new page
+                if (yPos > pageHeight - 80) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+                
+                // Add photo caption
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text(caption, margin, yPos);
+                yPos += 8;
+                
+                // Add photo
+                try {
+                    const imgData = img.src;
+                    const imgWidth = contentWidth;
+                    const imgHeight = 60; // Fixed height
+                    
+                    doc.addImage(imgData, 'JPEG', margin, yPos, imgWidth, imgHeight);
+                    yPos += imgHeight + 15;
+                    
+                    console.log('[PDF] Added photo', i + 1);
+                } catch (imgError) {
+                    console.error('[PDF] Failed to add photo', i + 1, imgError);
+                }
+            }
+            
+            // Generate filename
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            const filename = `sprint-fotograflar-${timestamp}.pdf`;
+            
+            console.log('[PDF] Saving PDF...');
+            
+            // Simple save - works on both web and mobile
+            doc.save(filename);
+            
+            this.ui.showToast('PDF indirildi!', 'success');
+            console.log('[PDF] ✅ Photos PDF completed');
+            
+        } catch (error) {
+            console.error('[PDF] Photos PDF failed:', error);
+            this.ui.showToast('PDF hatası: ' + error.message, 'error');
+        }
+    }
+
+    /**
      * Generate PDF from result screen (screenshot style)
      */
     async generatePDF() {
         try {
+            console.log('[PDF] 1. Starting PDF generation...');
+            
             // Check if html2canvas is loaded
             if (typeof html2canvas === 'undefined') {
+                console.error('[PDF] html2canvas is undefined!');
+                alert('HATA: html2canvas yüklenmedi');
                 throw new Error('html2canvas kütüphanesi yüklenemedi');
             }
+            console.log('[PDF] 2. html2canvas OK');
+            
+            // Check if jsPDF is loaded
+            if (typeof window.jspdf === 'undefined') {
+                console.error('[PDF] jsPDF is undefined!');
+                alert('HATA: jsPDF yüklenmedi');
+                throw new Error('jsPDF kütüphanesi yüklenemedi');
+            }
+            console.log('[PDF] 3. jsPDF OK');
             
             this.ui.showToast('PDF oluşturuluyor...', 'info');
             
             // Get the result screen element
             const resultScreen = document.getElementById('result-screen');
+            if (!resultScreen) {
+                console.error('[PDF] result-screen element not found!');
+                alert('HATA: Sonuç ekranı bulunamadı');
+                throw new Error('Sonuç ekranı bulunamadı');
+            }
+            console.log('[PDF] 4. Result screen found');
             
             // Temporarily hide buttons we don't want in PDF
             const saveBtn = document.getElementById('save-result-btn');
             const pdfBtn = document.getElementById('download-pdf-btn');
+            const sessionPdfBtn = document.getElementById('session-pdf-btn');
             const finishControls = document.getElementById('finish-controls');
             const waitingMessage = document.getElementById('waiting-restart-message');
             
             const originalDisplay = {
-                save: saveBtn.style.display,
-                pdf: pdfBtn.style.display,
-                finish: finishControls.style.display,
-                waiting: waitingMessage.style.display
+                save: saveBtn ? saveBtn.style.display : '',
+                pdf: pdfBtn ? pdfBtn.style.display : '',
+                sessionPdf: sessionPdfBtn ? sessionPdfBtn.style.display : '',
+                finish: finishControls ? finishControls.style.display : '',
+                waiting: waitingMessage ? waitingMessage.style.display : ''
             };
             
-            saveBtn.style.display = 'none';
-            pdfBtn.style.display = 'none';
-            finishControls.style.display = 'none';
-            waitingMessage.style.display = 'none';
+            if (saveBtn) saveBtn.style.display = 'none';
+            if (pdfBtn) pdfBtn.style.display = 'none';
+            if (sessionPdfBtn) sessionPdfBtn.style.display = 'none';
+            if (finishControls) finishControls.style.display = 'none';
+            if (waitingMessage) waitingMessage.style.display = 'none';
+            
+            console.log('[PDF] 5. Buttons hidden');
+            console.log('[PDF] 6. Capturing screenshot...');
             
             // Capture screenshot
             const canvas = await html2canvas(resultScreen, {
-                scale: 2, // Higher quality
+                scale: 2,
                 backgroundColor: '#ffffff',
-                logging: false,
+                logging: true,
                 useCORS: true,
                 allowTaint: true
             });
             
+            console.log('[PDF] 7. Screenshot captured, canvas size:', canvas.width, 'x', canvas.height);
+            
             // Restore button visibility
-            saveBtn.style.display = originalDisplay.save;
-            pdfBtn.style.display = originalDisplay.pdf;
-            finishControls.style.display = originalDisplay.finish;
-            waitingMessage.style.display = originalDisplay.waiting;
+            if (saveBtn) saveBtn.style.display = originalDisplay.save;
+            if (pdfBtn) pdfBtn.style.display = originalDisplay.pdf;
+            if (sessionPdfBtn) sessionPdfBtn.style.display = originalDisplay.sessionPdf;
+            if (finishControls) finishControls.style.display = originalDisplay.finish;
+            if (waitingMessage) waitingMessage.style.display = originalDisplay.waiting;
+            
+            console.log('[PDF] 8. Buttons restored');
             
             // Convert canvas to image
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            console.log('[PDF] 9. Image data created, length:', imgData.length);
             
             // Create PDF
             const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            console.log('[PDF] 10. PDF document created');
             
-            // Calculate PDF dimensions (A4 portrait)
-            const pdfWidth = 210; // A4 width in mm
-            const pdfHeight = 297; // A4 height in mm
-            
+            // Calculate dimensions
+            const pdfWidth = 210;
+            const pdfHeight = 297;
             const imgWidth = canvas.width;
             const imgHeight = canvas.height;
             const ratio = imgWidth / imgHeight;
             
-            // Fit image to PDF page
-            let finalWidth = pdfWidth - 20; // 10mm margin on each side
+            let finalWidth = pdfWidth - 20;
             let finalHeight = finalWidth / ratio;
             
-            // If height exceeds page, scale down
             if (finalHeight > pdfHeight - 20) {
                 finalHeight = pdfHeight - 20;
                 finalWidth = finalHeight * ratio;
             }
             
-            const doc = new jsPDF('p', 'mm', 'a4');
-            
-            // Center the image
             const xOffset = (pdfWidth - finalWidth) / 2;
             const yOffset = 10;
             
+            console.log('[PDF] 11. Adding image to PDF...');
             doc.addImage(imgData, 'JPEG', xOffset, yOffset, finalWidth, finalHeight);
+            console.log('[PDF] 12. Image added to PDF');
             
             // Generate filename
             const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
             const filename = `sprint-sonuc-${timestamp}.pdf`;
             
-            // Check if running in Capacitor (native app)
-            if (window.Capacitor !== undefined) {
-                // Use Capacitor Filesystem API
-                const { Filesystem, Directory } = window.Capacitor.Plugins;
+            // Check if mobile
+            const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+            console.log('[PDF] 13. Is mobile:', isMobile);
+            
+            if (isMobile) {
+                console.log('[PDF] 14. Mobile: Opening in new tab...');
                 
-                if (Filesystem) {
-                    // Get PDF as base64
-                    const pdfBase64 = doc.output('datauristring').split(',')[1];
-                    
-                    // Save to Downloads directory
-                    const result = await Filesystem.writeFile({
-                        path: filename,
-                        data: pdfBase64,
-                        directory: Directory.Documents, // or Directory.External
-                        recursive: true
-                    });
-                    
-                    console.log('[App] PDF saved to:', result.uri);
-                    this.ui.showToast('PDF kaydedildi: Belgeler/' + filename, 'success');
+                // Mobile: Open PDF in new tab
+                const pdfDataUri = doc.output('dataurlstring');
+                console.log('[PDF] 15. Data URI created, length:', pdfDataUri.length);
+                
+                const newWindow = window.open('', '_blank');
+                console.log('[PDF] 16. New window:', newWindow ? 'opened' : 'blocked');
+                
+                if (newWindow) {
+                    newWindow.document.write(`
+                        <html>
+                        <head>
+                            <title>${filename}</title>
+                            <meta name="viewport" content="width=device-width, initial-scale=1">
+                            <style>
+                                body { margin: 0; padding: 20px; font-family: Arial; text-align: center; }
+                                h2 { color: #333; }
+                                iframe { width: 95%; height: 60vh; border: 2px solid #4CAF50; margin: 20px 0; }
+                                .download-btn {
+                                    display: inline-block;
+                                    margin: 20px auto;
+                                    padding: 20px 40px;
+                                    background: #4CAF50;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 8px;
+                                    font-size: 18px;
+                                    font-weight: bold;
+                                    cursor: pointer;
+                                    text-decoration: none;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h2>✅ Sprint Sonucu PDF</h2>
+                            <iframe src="${pdfDataUri}"></iframe>
+                            <br>
+                            <a href="${pdfDataUri}" download="${filename}" class="download-btn">
+                                📥 PDF İNDİR
+                            </a>
+                        </body>
+                        </html>
+                    `);
+                    console.log('[PDF] 17. Content written to new window');
+                    this.ui.showToast('PDF yeni sekmede açıldı!', 'success');
                 } else {
-                    throw new Error('Filesystem plugin bulunamadı');
+                    console.log('[PDF] 18. Popup blocked, trying direct download...');
+                    const link = document.createElement('a');
+                    link.href = pdfDataUri;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    this.ui.showToast('PDF indiriliyor...', 'info');
                 }
             } else {
-                // Web: Use normal download
+                console.log('[PDF] 14. Desktop: Normal download...');
                 doc.save(filename);
-                this.ui.showToast('PDF indirildi', 'success');
+                this.ui.showToast('PDF indirildi: ' + filename, 'success');
+            }
+            
+            console.log('[PDF] ✅ PDF generation completed successfully!');
+            
+        } catch (error) {
+            console.error('[PDF] ❌ Generation failed at step:', error);
+            console.error('[PDF] Error name:', error.name);
+            console.error('[PDF] Error message:', error.message);
+            console.error('[PDF] Error stack:', error.stack);
+            alert('PDF HATASI:\n' + error.message + '\n\nConsole\'a bakın');
+            this.ui.showToast('PDF hatası: ' + error.message, 'error');
+        }
+    }
+    
+    /**
+     * Generate session PDF with all saved races (table style)
+     */
+    async generateSessionPDF() {
+        try {
+            this.ui.showToast('Oturum PDF oluşturuluyor...', 'info');
+            
+            // Get all saved races from localStorage
+            const races = JSON.parse(localStorage.getItem('races') || '[]');
+            
+            if (races.length === 0) {
+                this.ui.showToast('Henüz kaydedilmiş koşu yok', 'warning');
+                return;
+            }
+            
+            // Create PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Title
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text('Sprint Koşu Oturumu', 105, 20, { align: 'center' });
+            
+            // Date
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('tr-TR', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            doc.text(`Rapor Tarihi: ${dateStr}`, 105, 28, { align: 'center' });
+            
+            // Summary
+            doc.setFontSize(12);
+            doc.text(`Toplam Koşu Sayısı: ${races.length}`, 20, 40);
+            
+            // Table headers
+            let yPos = 55;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'bold');
+            
+            const colX = {
+                no: 20,
+                athlete: 40,
+                time: 100,
+                distance: 130,
+                date: 160
+            };
+            
+            doc.text('#', colX.no, yPos);
+            doc.text('Sporcu', colX.athlete, yPos);
+            doc.text('Süre', colX.time, yPos);
+            doc.text('Mesafe', colX.distance, yPos);
+            doc.text('Tarih', colX.date, yPos);
+            
+            // Draw line under headers
+            doc.line(20, yPos + 2, 190, yPos + 2);
+            
+            yPos += 8;
+            doc.setFont(undefined, 'normal');
+            
+            // Table rows
+            races.forEach((race, index) => {
+                // Check if we need a new page
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                    
+                    // Repeat headers on new page
+                    doc.setFont(undefined, 'bold');
+                    doc.text('#', colX.no, yPos);
+                    doc.text('Sporcu', colX.athlete, yPos);
+                    doc.text('Süre', colX.time, yPos);
+                    doc.text('Mesafe', colX.distance, yPos);
+                    doc.text('Tarih', colX.date, yPos);
+                    doc.line(20, yPos + 2, 190, yPos + 2);
+                    yPos += 8;
+                    doc.setFont(undefined, 'normal');
+                }
+                
+                // Row number
+                doc.text(`${index + 1}`, colX.no, yPos);
+                
+                // Athlete name
+                const athleteName = race.athleteName || 'İsimsiz';
+                doc.text(athleteName.substring(0, 20), colX.athlete, yPos);
+                
+                // Time
+                const time = race.finishTime ? `${race.finishTime.toFixed(2)}s` : '-';
+                doc.text(time, colX.time, yPos);
+                
+                // Distance
+                const distance = race.distances && race.distances.length > 0 
+                    ? `${race.distances[race.distances.length - 1]}m` 
+                    : '-';
+                doc.text(distance, colX.distance, yPos);
+                
+                // Date
+                const raceDate = new Date(race.timestamp);
+                const dateStr = raceDate.toLocaleDateString('tr-TR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                doc.text(dateStr, colX.date, yPos);
+                
+                yPos += 7;
+            });
+            
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+            doc.text('Sprint Timer - Profesyonel Sprint Zamanlama Sistemi', 105, 287, { align: 'center' });
+            
+            // Generate filename
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = `sprint-oturum-${timestamp}.pdf`;
+            
+            // Check if mobile
+            const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                // Mobile: Open PDF in new tab
+                const pdfDataUri = doc.output('dataurlstring');
+                const newWindow = window.open();
+                if (newWindow) {
+                    newWindow.document.write(`
+                        <html>
+                        <head>
+                            <title>${filename}</title>
+                            <style>
+                                body { margin: 0; padding: 20px; font-family: Arial; }
+                                iframe { width: 100%; height: 80vh; border: 1px solid #ccc; }
+                                .download-btn {
+                                    display: block;
+                                    margin: 20px auto;
+                                    padding: 15px 30px;
+                                    background: #4CAF50;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    font-size: 16px;
+                                    cursor: pointer;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h2>Sprint Oturum Raporu</h2>
+                            <p>${races.length} koşu</p>
+                            <iframe src="${pdfDataUri}"></iframe>
+                            <a href="${pdfDataUri}" download="${filename}">
+                                <button class="download-btn">📥 PDF İndir</button>
+                            </a>
+                        </body>
+                        </html>
+                    `);
+                    this.ui.showToast('PDF yeni sekmede açıldı', 'success');
+                } else {
+                    // Popup blocked, try direct download
+                    const link = document.createElement('a');
+                    link.href = pdfDataUri;
+                    link.download = filename;
+                    link.click();
+                    this.ui.showToast('PDF indiriliyor...', 'info');
+                }
+            } else {
+                // Desktop: Normal download
+                doc.save(filename);
+                this.ui.showToast('Oturum PDF indirildi: ' + filename, 'success');
             }
             
         } catch (error) {
-            console.error('[App] PDF generation failed:', error);
-            this.ui.showToast('PDF oluşturulamadı: ' + error.message, 'error');
+            console.error('[App] Session PDF generation failed:', error);
+            this.ui.showToast('Oturum PDF oluşturulamadı: ' + error.message, 'error');
         }
     }
     
@@ -1785,8 +2189,21 @@ class SprintTimerApp {
         
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
         downloadPdfBtn.onclick = () => {
-            this.generatePDF();
+            // Use simple photos PDF instead of complex screenshot
+            this.generatePhotosPDF();
         };
+        
+        const sessionPdfBtn = document.getElementById('session-pdf-btn');
+        sessionPdfBtn.onclick = () => {
+            this.generateSessionPDF();
+        };
+        
+        const photoPdfBtn = document.getElementById('photo-pdf-btn');
+        if (photoPdfBtn) {
+            photoPdfBtn.onclick = () => {
+                this.generatePhotosPDF();
+            };
+        }
         
         // Show appropriate controls based on phone role
         if (this.isFinish) {

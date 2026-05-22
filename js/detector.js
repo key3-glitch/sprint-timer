@@ -27,6 +27,12 @@ class MotionDetector {
      */
     async initializeCamera() {
         try {
+            // Request Wake Lock to prevent screen from turning off
+            if (typeof wakeLockManager !== 'undefined') {
+                await wakeLockManager.request();
+                console.log('[Detector] Wake Lock requested');
+            }
+            
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'environment', // Back camera
@@ -273,9 +279,30 @@ class MotionDetector {
      * Stop camera
      */
     stopCamera() {
+        console.log('[Detector] Stopping camera...');
+        
         if (this.video.srcObject) {
-            this.video.srcObject.getTracks().forEach(track => track.stop());
+            // Stop all tracks
+            const tracks = this.video.srcObject.getTracks();
+            tracks.forEach(track => {
+                track.stop();
+                console.log('[Detector] Track stopped:', track.kind);
+            });
+            
+            // Clear video source
             this.video.srcObject = null;
+            console.log('[Detector] Video source cleared');
+        }
+        
+        // Release Wake Lock when camera stops
+        if (typeof wakeLockManager !== 'undefined') {
+            wakeLockManager.release();
+            console.log('[Detector] Wake Lock released');
+        }
+        
+        // Clear canvas
+        if (this.canvas && this.ctx) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         }
     }
 
