@@ -36,9 +36,9 @@ class MotionDetector {
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'environment', // Back camera
-                    frameRate: { ideal: 30, min: 15 },
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
+                    frameRate: { ideal: 30, min: 20 },
+                    width: { ideal: 1280, min: 640 },
+                    height: { ideal: 720, min: 480 }
                 }
             });
             
@@ -57,6 +57,8 @@ class MotionDetector {
             this.canvas.height = this.video.videoHeight;
             
             console.log(`[Detector] Camera initialized: ${this.canvas.width}x${this.canvas.height}`);
+            console.log(`[Detector] Video playing: ${!this.video.paused}, readyState: ${this.video.readyState}`);
+            
             return true;
         } catch (error) {
             console.error('[Detector] Camera initialization failed:', error);
@@ -93,6 +95,13 @@ class MotionDetector {
         if (!this.isActive) return;
         
         this.frameCount++;
+        
+        // Check if video is actually playing
+        if (this.video.paused || this.video.readyState < 2) {
+            console.warn(`[Detector] Video not ready: paused=${this.video.paused}, readyState=${this.video.readyState}`);
+            requestAnimationFrame(() => this.processFrame());
+            return;
+        }
         
         // Draw current frame to canvas
         this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
