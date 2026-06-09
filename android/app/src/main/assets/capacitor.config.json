@@ -1,0 +1,12 @@
+{
+	"appId": "com.sprinttimer.app",
+	"appName": "Sprint Timer",
+	"webDir": "www",
+	"server": {
+		"url": "https://sprint-timer-production.up.railway.app",
+		"cleartext": false
+	},
+	"android": {
+		"allowMixedContent": true
+	}
+}

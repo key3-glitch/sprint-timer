@@ -1249,7 +1249,8 @@ class SprintTimerApp {
             }
             
             // All ready - START the race
-            this.raceStartTime = detection.timestamp;
+            // Use synchronized timer, not local detection timestamp
+            this.raceStartTime = this.timer.now();
             this.state = 'RUNNING';
             
             // CLEAR old split times before starting new race
@@ -1392,10 +1393,11 @@ class SprintTimerApp {
             return;
         }
         
-        const finishTime = detection.timestamp;
+        const finishTime = this.timer.now(); // Use synchronized timer
         const elapsed = (finishTime - this.raceStartTime) / 1000; // Convert to seconds
         
         console.log(`[App] Finish Phone: STOP detected, elapsed time: ${elapsed.toFixed(2)}s`);
+        console.log(`[App] Finish Phone: startTime=${this.raceStartTime.toFixed(2)}ms, finishTime=${finishTime.toFixed(2)}ms`);
         
         this.state = 'FINISHED';
         this.detector.stopDetection();

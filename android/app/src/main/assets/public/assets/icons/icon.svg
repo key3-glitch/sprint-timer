@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a73e8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1557b0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#grad)"/>
+  
+  <!-- Stopwatch Body -->
+  <circle cx="256" cy="280" r="160" fill="white" stroke="#1a73e8" stroke-width="8"/>
+  
+  <!-- Stopwatch Button -->
+  <rect x="236" y="100" width="40" height="30" rx="5" fill="#1a73e8"/>
+  <rect x="246" y="80" width="20" height="25" rx="3" fill="#1557b0"/>
+  
+  <!-- Clock Face -->
+  <circle cx="256" cy="280" r="140" fill="none" stroke="#e8f0fe" stroke-width="4"/>
+  
+  <!-- Hour Markers -->
+  <line x1="256" y1="150" x2="256" y2="165" stroke="#1a73e8" stroke-width="4" stroke-linecap="round"/>
+  <line x1="256" y1="395" x2="256" y2="410" stroke="#1a73e8" stroke-width="4" stroke-linecap="round"/>
+  <line x1="386" y1="280" x2="371" y2="280" stroke="#1a73e8" stroke-width="4" stroke-linecap="round"/>
+  <line x1="126" y1="280" x2="141" y2="280" stroke="#1a73e8" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Minute Hand -->
+  <line x1="256" y1="280" x2="256" y2="180" stroke="#1a73e8" stroke-width="8" stroke-linecap="round"/>
+  
+  <!-- Second Hand -->
+  <line x1="256" y1="280" x2="320" y2="240" stroke="#ea4335" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Center Dot -->
+  <circle cx="256" cy="280" r="12" fill="#1a73e8"/>
+  
+  <!-- Sprint Icon -->
+  <path d="M 180 450 L 200 430 L 220 450 L 240 430 L 260 450 L 280 430 L 300 450 L 320 430 L 340 450" 
+        fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
