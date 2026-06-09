@@ -1047,18 +1047,38 @@ class SprintTimerApp {
             this.goToIdleScreen();
         };
         
-        // If Finish phone, send PREPARE signal to Start phone
+        // If Finish phone, send PREPARE signal with coordinated start time
         if (!this.isPhone1) {
+            // Calculate coordinated countdown start: 10 seconds from now
+            const coordinatedCountdownStart = this.timer.now() + 10000;
+            
             this.connection.send({
                 type: 'PREPARE',
                 timestamp: this.timer.now(),
-                payload: {}
+                payload: {
+                    coordinatedCountdownStart: coordinatedCountdownStart
+                }
             });
-            console.log('[App] Finish Phone: PREPARE signal sent to Start phone');
+            console.log(`[App] Finish Phone: PREPARE signal sent with coordinated time ${coordinatedCountdownStart.toFixed(2)}ms`);
+            
+            // Store for this phone too
+            this.coordinatedCountdownStart = coordinatedCountdownStart;
         }
         
-        // Start countdown (5 seconds) with VERY LOUD audio beeps
+        // Wait for coordinated time or start immediately if we don't have it yet
+        if (this.coordinatedCountdownStart) {
+            const waitTime = this.coordinatedCountdownStart - this.timer.now();
+            if (waitTime > 0) {
+                console.log(`[App] Waiting ${waitTime.toFixed(0)}ms until coordinated countdown start`);
+                await this.sleep(waitTime);
+            }
+        }
+        
+        // Coordinated countdown - all phones beep at same absolute time
         for (let i = 5; i > 0; i--) {
+            const beepTime = this.timer.now();
+            console.log(`[App] Coordinated beep ${6-i}/6 at ${beepTime.toFixed(2)}ms`);
+            
             this.ui.updateCountdown(i);
             this.ui.updatePreparationStatus(
                 i > 3 ? 'Hazırlanıyor...' : 'Hazır ✓',

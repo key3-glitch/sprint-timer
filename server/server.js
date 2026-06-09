@@ -166,17 +166,25 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Handle time sync requests (SYNC)
+    // Handle time sync requests (SYNC) - NTP-like protocol
     socket.on('SYNC', (data) => {
-        // Simply echo back the client timestamp
-        // Client will calculate offset based on round-trip time
+        // Record server receive time
+        const serverReceiveTime = Date.now(); // or use performance.now() if needed
+        
+        // Immediately record server send time (minimal processing delay)
+        const serverSendTime = Date.now();
+        
+        // Send PONG response with server timestamps
         socket.emit('PONG', {
             type: 'PONG',
             payload: {
                 clientTimestamp: data.timestamp,
-                serverTime: data.timestamp // Echo back for now
+                serverReceiveTime: serverReceiveTime,
+                serverSendTime: serverSendTime
             }
         });
+        
+        console.log(`[Server] SYNC: clientTime=${data.timestamp}, serverTime=${serverReceiveTime}`);
     });
 
     // Handle race messages (START, STOP, PREPARE, READY, SPLIT)

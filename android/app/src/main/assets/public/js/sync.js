@@ -151,13 +151,18 @@ class TimeSyncManager {
                     this.connection.off('message', handler);
                     
                     const t4 = this.timer.now(); // Client receive time
+                    const t2 = message.payload.serverReceiveTime; // Server receive time
+                    const t3 = message.payload.serverSendTime; // Server send time
                     const rtt = t4 - t1; // Round trip time
                     
-                    // For now, assume minimal offset since both are on same machine
-                    // In production, this would use proper NTP calculation
-                    const offset = 0; // Simplified for localhost testing
+                    // Calculate offset using NTP algorithm
+                    // offset = ((t2 - t1) + (t3 - t4)) / 2
+                    // This accounts for network delay in both directions
+                    const offset = ((t2 - t1) + (t3 - t4)) / 2;
                     
-                    resolve({ t1, t4, rtt, offset, quality: 1 / rtt });
+                    console.log(`[Sync] Measurement: t1=${t1.toFixed(2)}, t2=${t2.toFixed(2)}, t3=${t3.toFixed(2)}, t4=${t4.toFixed(2)}, offset=${offset.toFixed(2)}ms, rtt=${rtt.toFixed(2)}ms`);
+                    
+                    resolve({ t1, t2, t3, t4, rtt, offset, quality: 1 / rtt });
                 }
             };
             
