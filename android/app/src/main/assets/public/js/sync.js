@@ -131,7 +131,7 @@ class TimeSyncManager {
      */
     async performSyncMeasurement() {
         return new Promise((resolve) => {
-            const t1 = this.timer.now(); // Client send time
+            const t1 = performance.now(); // RAW client send time (no offset!)
             
             // Send SYNC request
             this.connection.send({
@@ -150,7 +150,7 @@ class TimeSyncManager {
                     clearTimeout(timeout);
                     this.connection.off('message', handler);
                     
-                    const t4 = this.timer.now(); // Client receive time
+                    const t4 = performance.now(); // RAW client receive time (no offset!)
                     const t2 = message.payload.serverReceiveTime; // Server receive time
                     const t3 = message.payload.serverSendTime; // Server send time
                     const rtt = t4 - t1; // Round trip time
